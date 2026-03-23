@@ -8,7 +8,7 @@
   <script src="config.js"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <style>
     *,
     *::before,
@@ -1488,19 +1488,19 @@
   <div id="spb"></div>
 
   <nav class="topbar">
-    <a class="brand" href="/plagiarism">
+    <a class="brand" href="/landing">
       <div class="brand-ico">🔍</div>
       <div class="brand-name">Plagia<em>Scope</em></div>
     </a>
     <div class="top-r">
       <button class="dm-btn" id="dmBtn">🌙</button>
-      <a class="back-link" href="/plagiarism">← Home</a>
+      <a class="back-link" href="/landing">← Home</a>
     </div>
   </nav>
 
   <div class="page">
     <div class="pg-header">
-      <div class="pg-eyebrow">✦ BaiSQL AI · English Research</div>
+      <div class="pg-eyebrow">✦ Winston AI · English Research</div>
       <h1 class="pg-title">Research <em>Integrity</em> Checker</h1>
       <p class="pg-sub">Paste your text or upload a file — get your plagiarism report in seconds.</p>
     </div>
@@ -1559,7 +1559,17 @@
       <div class="captcha-wrap">
         <div class="captcha-title">Human verification</div>
         <div class="captcha-sub">Please complete the security check before running the scan.</div>
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAACu7HA_zSWn5iEok"></div>
+
+        <div class="cf-turnstile"
+          data-sitekey="0x4AAAAAACu7HA_zSWn5iEok"
+          data-callback="onTurnstileSuccess"
+          data-error-callback="onTurnstileError"
+          data-expired-callback="onTurnstileExpired">
+        </div>
+
+        <div id="turnstileStatus" style="margin-top:8px;font-size:12px;color:#666;">
+          Waiting for verification…
+        </div>
       </div>
 
       <button class="run-btn" id="runBtn" onclick="analyze()">🔍 Analyze for Plagiarism</button>
@@ -1576,7 +1586,7 @@
         <div class="s-center">🔍</div>
       </div>
       <div class="ld-text">
-        <strong id="ldPhase">Connecting to BaiSQL AI…</strong>
+        <strong id="ldPhase">Connecting to Winston AI…</strong>
         Scanning against 400 billion sources
         <div class="ld-dots">
           <div class="ld-dot"></div>
@@ -1649,6 +1659,23 @@
   <script>
     const TURNSTILE_SITE_KEY = '0x4AAAAAACu7HA_zSWn5iEok';
 
+    function onTurnstileSuccess(token) {
+      console.log('Turnstile success:', token ? token.slice(0, 20) + '...' : token);
+      const status = document.getElementById('turnstileStatus');
+      if (status) status.textContent = 'Verified';
+    }
+
+    function onTurnstileError(errorCode) {
+      console.error('Turnstile error:', errorCode);
+      const status = document.getElementById('turnstileStatus');
+      if (status) status.textContent = 'Verification error: ' + errorCode;
+    }
+
+    function onTurnstileExpired() {
+      console.warn('Turnstile expired');
+      const status = document.getElementById('turnstileStatus');
+      if (status) status.textContent = 'Verification expired';
+    }
     const htmlEl = document.documentElement;
     const dmBtn = document.getElementById('dmBtn');
     const saved = localStorage.getItem('ps-theme');
@@ -1762,7 +1789,9 @@
 
     function getTurnstileToken() {
       const tokenField = document.querySelector('[name="cf-turnstile-response"]');
-      return tokenField ? tokenField.value.trim() : '';
+      const token = tokenField ? tokenField.value.trim() : '';
+      console.log('Turnstile token present:', !!token, token ? token.slice(0, 20) + '...' : '(empty)');
+      return token;
     }
 
     function resetTurnstileWidget() {
@@ -1771,10 +1800,11 @@
           window.turnstile.reset();
         } catch (e) {}
       }
+      const status = document.getElementById('turnstileStatus');
+      if (status) status.textContent = 'Waiting for verification…';
     }
-
     const phases = [
-      'Connecting to BaiSQL AI…',
+      'Connecting to Winston AI…',
       'Uploading to scan engine…',
       'Comparing text sequences…',
       'Identifying matching passages…',
@@ -1876,8 +1906,16 @@
       startLoading();
 
       try {
-        const res = await fetch('proxy', opts);
-        const data = await res.json();
+        const res = await fetch('/proxy', opts);
+        const raw = await res.text();
+        console.log('RAW RESPONSE:', raw);
+
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch (e) {
+          throw new Error('Production proxy returned HTML or invalid JSON. First 300 chars: ' + raw.slice(0, 300));
+        }
 
         if (!res.ok) {
           throw new Error(data?.message || data?.error || `API error ${res.status}`);

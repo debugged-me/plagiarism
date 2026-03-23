@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlagiaScope | AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <style>
         *,
         *::before,
@@ -1951,7 +1952,7 @@
         </ul>
         <div class="nav-r">
             <button class="dm-btn" id="dmBtn">🌙</button>
-            <a class="nav-cta" href="/plagiarism/chat">Open Checker <span class="arr">→</span></a>
+            <a class="nav-cta" href="/chat">Open Checker <span class="arr">→</span></a>
 
         </div>
     </nav>
@@ -1966,7 +1967,7 @@
         <div class="hero-inner">
             <div class="hero-pill">
                 <span class="pill-dot"></span>
-                Powered by BaiSQL AI · English Research
+                Powered by Winston AI · English Research
             </div>
 
             <h1 class="hero-h1">
@@ -2094,7 +2095,7 @@
             <div class="step">
                 <div class="step-num">02</div>
                 <div class="step-ico">🔍</div>
-                <div class="step-title">BaiSQL AI scans 400B sources</div>
+                <div class="step-title">Winston AI scans 400B sources</div>
                 <div class="step-desc">Your text is compared against billions of webpages, academic publications, and databases to find any matching content.</div>
             </div>
             <div class="step">
@@ -2124,7 +2125,7 @@
             <div class="feat">
                 <div class="feat-ico">📄</div>
                 <div class="feat-title">File Upload Support</div>
-                <div class="feat-desc">Upload PDF, DOC, or DOCX files directly. BaiSQL AI extracts and scans the full text — no copy-pasting needed for long documents.</div>
+                <div class="feat-desc">Upload PDF, DOC, or DOCX files directly. Winston AI extracts and scans the full text — no copy-pasting needed for long documents.</div>
                 <span class="feat-tag">PDF · DOC · DOCX</span>
             </div>
             <div class="feat">
@@ -2162,7 +2163,7 @@
             <div class="ft-icon">🔍</div>
             <div class="ft-name">Plagia<em>Scope</em></div>
         </a>
-        <div class="ft-copy">© 2026 PlagiaScope · Powered by BaiSQL AI</div>
+        <div class="ft-copy">© 2026 PlagiaScope · Powered by Winston AI</div>
     </footer>
 
     <script>
