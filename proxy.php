@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/app/secure_config.php';
 session_start();
 
 header('Content-Type: application/json');
@@ -28,8 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 | 2) Because your Cloudflare secret was shared in chat, rotate it first,
 |    then paste the NEW secret here.
 */
-const WINSTON_API_KEY = '6b2lIHOItVmE1gOiDlme6Rch3dOcnlRMlwju27rj504cd711';
-const TURNSTILE_SECRET_KEY = '0x4AAAAAACu7HPXs3nrAwQsv5xTLRzMy2vo';
 
 const MAX_TEXT_LENGTH = 120000;
 const MIN_TEXT_LENGTH = 100;

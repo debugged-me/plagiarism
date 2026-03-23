@@ -1488,13 +1488,13 @@
   <div id="spb"></div>
 
   <nav class="topbar">
-    <a class="brand" href="landing.php">
+    <a class="brand" href="/plagiarism">
       <div class="brand-ico">🔍</div>
       <div class="brand-name">Plagia<em>Scope</em></div>
     </a>
     <div class="top-r">
       <button class="dm-btn" id="dmBtn">🌙</button>
-      <a class="back-link" href="landing.php">← Home</a>
+      <a class="back-link" href="/plagiarism">← Home</a>
     </div>
   </nav>
 
@@ -1876,7 +1876,7 @@
       startLoading();
 
       try {
-        const res = await fetch('proxy.php', opts);
+        const res = await fetch('proxy', opts);
         const data = await res.json();
 
         if (!res.ok) {

@@ -1979,7 +1979,7 @@
             </p>
 
             <div class="hero-ctas">
-                <a class="btn-main" href="chat.php">Start Checking Free <span class="arr">→</span></a>
+                <a class="btn-main" href="chat">Start Checking Free <span class="arr">→</span></a>
                 <a class="btn-out" href="#how">See how it works</a>
             </div>
 
@@ -2152,7 +2152,7 @@
                 <div class="cta-eyebrow">Ready when you are</div>
                 <h2 class="cta-h">Check your research.<br><em>Right now.</em></h2>
                 <p class="cta-p">No sign-up. No waiting. Paste your text or upload your file and get results in seconds.</p>
-                <a class="btn-white" href="chat.php">Open PlagiaScope <span class="arr">→</span></a>
+                <a class="btn-white" href="chat">Open PlagiaScope <span class="arr">→</span></a>
             </div>
         </div>
     </section>
