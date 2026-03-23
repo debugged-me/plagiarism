@@ -1,13 +1,12 @@
 <?php
-// ─────────────────────────────────────────────
-//  PlagiaScope — PHP Proxy for Winston AI
-//  Supports: plain text + file uploads (PDF, DOC, DOCX)
-// ─────────────────────────────────────────────
 
-header('Access-Control-Allow-Origin: *');
+declare(strict_types=1);
+
+session_start();
+
+header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -20,129 +19,257 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// ── Parse body ──
-// Multipart (file upload) comes as $_POST + $_FILES
-// JSON (text only) comes as raw body
-$isMultipart = isset($_SERVER['CONTENT_TYPE']) &&
-    strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false;
+/*
+|--------------------------------------------------------------------------
+| CONFIG
+|--------------------------------------------------------------------------
+| IMPORTANT:
+| 1) Put your REAL Winston API key here or load it from a secure config file.
+| 2) Because your Cloudflare secret was shared in chat, rotate it first,
+|    then paste the NEW secret here.
+*/
+const WINSTON_API_KEY = '6b2lIHOItVmE1gOiDlme6Rch3dOcnlRMlwju27rj504cd711';
+const TURNSTILE_SECRET_KEY = '0x4AAAAAACu7HPXs3nrAwQsv5xTLRzMy2vo';
 
-if ($isMultipart) {
-    $apiKey   = $_POST['_apiKey']  ?? '';
-    $cf_token = $_POST['cf_token'] ?? '';
-    $language = $_POST['language'] ?? 'en';
-    $country  = $_POST['country']  ?? 'us';
-    $textBody = $_POST['text']     ?? '';
-} else {
-    $raw  = json_decode(file_get_contents('php://input'), true);
-    if (!$raw) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Invalid request body']);
-        exit;
+const MAX_TEXT_LENGTH = 120000;
+const MIN_TEXT_LENGTH = 100;
+const MAX_FILE_SIZE   = 10485760; // 10 MB
+
+$storageDir = __DIR__ . '/storage/plagiascope_tmp/';
+$publicDir  = __DIR__ . '/uploads/plagiascope_public/';
+
+if (!is_dir($storageDir) && !mkdir($storageDir, 0755, true) && !is_dir($storageDir)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Failed to create storage directory']);
+    exit;
+}
+
+if (!is_dir($publicDir) && !mkdir($publicDir, 0755, true) && !is_dir($publicDir)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Failed to create public upload directory']);
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| SIMPLE RATE LIMIT
+|--------------------------------------------------------------------------
+*/
+$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$now = time();
+
+if (!isset($_SESSION['ps_rate'])) {
+    $_SESSION['ps_rate'] = [];
+}
+
+$_SESSION['ps_rate'] = array_values(array_filter(
+    $_SESSION['ps_rate'],
+    static fn($ts) => ($now - (int)$ts) < 300
+));
+
+if (count($_SESSION['ps_rate']) >= 10) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Too many scan requests. Please wait a few minutes and try again.']);
+    exit;
+}
+
+$_SESSION['ps_rate'][] = $now;
+
+/*
+|--------------------------------------------------------------------------
+| HELPERS
+|--------------------------------------------------------------------------
+*/
+function json_error(int $code, string $message): void
+{
+    http_response_code($code);
+    echo json_encode(['error' => $message]);
+    exit;
+}
+
+function get_request_payload(): array
+{
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    $isMultipart = stripos($contentType, 'multipart/form-data') !== false;
+
+    if ($isMultipart) {
+        return [
+            'isMultipart' => true,
+            'text'        => $_POST['text'] ?? '',
+            'language'    => $_POST['language'] ?? 'en',
+            'country'     => $_POST['country'] ?? 'us',
+            'turnstile'   => $_POST['cf-turnstile-response'] ?? '',
+        ];
     }
-    $apiKey   = $raw['_apiKey']  ?? '';
-    $cf_token = $raw['cf_token'] ?? '';
-    $language = $raw['language'] ?? 'en';
-    $country  = $raw['country']  ?? 'us';
-    $textBody = $raw['text']     ?? '';
+
+    $raw = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($raw)) {
+        json_error(400, 'Invalid request body');
+    }
+
+    return [
+        'isMultipart' => false,
+        'text'        => $raw['text'] ?? '',
+        'language'    => $raw['language'] ?? 'en',
+        'country'     => $raw['country'] ?? 'us',
+        'turnstile'   => $raw['cf-turnstile-response'] ?? '',
+    ];
 }
 
-// ── Cloudflare Turnstile validation ──
-$turnstile_secret = '0x4AAAAAACu4yZ4M7OXpeGy_lgbLVY5n08A';
-if (empty($cf_token)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Security token missing']);
-    exit;
-}
-$verify_data = http_build_query([
-    'secret'   => $turnstile_secret,
-    'response' => $cf_token,
-    'remoteip' => $_SERVER['REMOTE_ADDR'] ?? ''
-]);
-$verify_context = stream_context_create([
-    'http' => [
-        'method'  => 'POST',
-        'header'  => 'Content-Type: application/x-www-form-urlencoded',
-        'content' => $verify_data
-    ]
-]);
-$verify_resp = file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $verify_context);
-$verify_json = json_decode($verify_resp, true);
-if (!$verify_json['success']) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Security check failed']);
-    exit;
+function verify_turnstile(string $token, string $secret, string $ip): void
+{
+    if ($token === '') {
+        json_error(400, 'Human verification token is missing.');
+    }
+
+    $postData = http_build_query([
+        'secret'   => $secret,
+        'response' => $token,
+        'remoteip' => $ip,
+    ]);
+
+    $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $postData,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+
+    $response = curl_exec($ch);
+    $curlErr  = curl_error($ch);
+    curl_close($ch);
+
+    if ($curlErr) {
+        json_error(502, 'Failed to verify human check.');
+    }
+
+    $decoded = json_decode((string)$response, true);
+    if (!is_array($decoded) || empty($decoded['success'])) {
+        json_error(403, 'Human verification failed. Please try again.');
+    }
 }
 
-
-if (!$apiKey) {
-    http_response_code(401);
-    echo json_encode(['error' => 'No API key provided']);
-    exit;
+function safe_unlink(?string $path): void
+{
+    if ($path && is_file($path)) {
+        @unlink($path);
+    }
 }
 
-// ── Build Winston AI payload ──
+function build_public_file_url(string $publicFileName): string
+{
+    $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    $scheme = $https ? 'https' : 'http';
+    $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $base   = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
+
+    return $scheme . '://' . $host . $base . '/uploads/plagiascope_public/' . rawurlencode($publicFileName);
+}
+
+/*
+|--------------------------------------------------------------------------
+| REQUEST PARSE + TURNSTILE VERIFY
+|--------------------------------------------------------------------------
+*/
+$payloadData = get_request_payload();
+
+$text      = trim((string)$payloadData['text']);
+$language  = trim((string)$payloadData['language']) ?: 'en';
+$country   = trim((string)$payloadData['country']) ?: 'us';
+$turnstile = trim((string)$payloadData['turnstile']);
+
+verify_turnstile($turnstile, TURNSTILE_SECRET_KEY, $ip);
+
+/*
+|--------------------------------------------------------------------------
+| BUILD WINSTON PAYLOAD
+|--------------------------------------------------------------------------
+*/
 $payload = [
     'language' => $language,
     'country'  => $country,
 ];
 
-// ── Handle file upload ──
-$uploadedFilePath = null;
+$storedPrivatePath = null;
+$storedPublicPath  = null;
 
-if ($isMultipart && !empty($_FILES['file']['tmp_name'])) {
-    $allowed  = ['pdf', 'doc', 'docx'];
-    $origName = $_FILES['file']['name'];
-    $ext      = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
-
-    if (!in_array($ext, $allowed)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Only PDF, DOC, and DOCX files are supported.']);
-        exit;
+if ($payloadData['isMultipart'] && !empty($_FILES['file']['tmp_name'])) {
+    if (!isset($_FILES['file']['error']) || is_array($_FILES['file']['error'])) {
+        json_error(400, 'Invalid uploaded file.');
     }
 
-    if ($_FILES['file']['size'] > 10 * 1024 * 1024) {
-        http_response_code(400);
-        echo json_encode(['error' => 'File size must be under 10 MB.']);
-        exit;
+    if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        json_error(400, 'File upload failed.');
     }
 
-    $uploadDir = __DIR__ . '/uploads/';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
+    if ((int)$_FILES['file']['size'] > MAX_FILE_SIZE) {
+        json_error(400, 'File size must be under 10 MB.');
     }
 
-    $fileName = uniqid('ps_', true) . '.' . $ext;
-    $filePath = $uploadDir . $fileName;
+    $origName = (string)($_FILES['file']['name'] ?? 'file');
+    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
 
-    if (!move_uploaded_file($_FILES['file']['tmp_name'], $filePath)) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Failed to save uploaded file.']);
-        exit;
+    $allowedExt = ['pdf', 'doc', 'docx'];
+    if (!in_array($ext, $allowedExt, true)) {
+        json_error(400, 'Only PDF, DOC, and DOCX files are supported.');
     }
 
-    $uploadedFilePath = $filePath;
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime  = finfo_file($finfo, $_FILES['file']['tmp_name']);
+    finfo_close($finfo);
 
-    // Build public URL for the uploaded file
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host     = $_SERVER['HTTP_HOST'];
-    $dir      = rtrim(dirname($_SERVER['REQUEST_URI']), '/');
-    $fileUrl  = $protocol . '://' . $host . $dir . '/uploads/' . $fileName;
+    $allowedMime = [
+        'pdf'  => ['application/pdf'],
+        'doc'  => ['application/msword', 'application/octet-stream'],
+        'docx' => [
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/zip',
+            'application/octet-stream'
+        ],
+    ];
 
-    $payload['file'] = $fileUrl;
-} elseif (!empty($textBody)) {
-    if (strlen($textBody) < 100) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Text must be at least 100 characters.']);
-        exit;
+    if (!in_array($mime, $allowedMime[$ext], true)) {
+        json_error(400, 'Invalid file type or MIME type mismatch.');
     }
-    $payload['text'] = $textBody;
+
+    $safeBase = bin2hex(random_bytes(16));
+    $privateName = $safeBase . '.' . $ext;
+    $publicName  = $safeBase . '.' . $ext;
+
+    $storedPrivatePath = $storageDir . $privateName;
+    $storedPublicPath  = $publicDir . $publicName;
+
+    if (!move_uploaded_file($_FILES['file']['tmp_name'], $storedPrivatePath)) {
+        json_error(500, 'Failed to store uploaded file.');
+    }
+
+    if (!copy($storedPrivatePath, $storedPublicPath)) {
+        safe_unlink($storedPrivatePath);
+        json_error(500, 'Failed to prepare public scan file.');
+    }
+
+    $payload['file'] = build_public_file_url($publicName);
 } else {
-    http_response_code(400);
-    echo json_encode(['error' => 'Provide either text or a file to scan.']);
-    exit;
+    if ($text === '') {
+        json_error(400, 'Please provide text or upload a file.');
+    }
+    if (strlen($text) < MIN_TEXT_LENGTH) {
+        json_error(400, 'Text must be at least 100 characters.');
+    }
+    if (strlen($text) > MAX_TEXT_LENGTH) {
+        json_error(400, 'Text exceeds the maximum allowed length.');
+    }
+    $payload['text'] = $text;
 }
 
-// ── Forward to Winston AI ──
+/*
+|--------------------------------------------------------------------------
+| FORWARD TO WINSTON
+|--------------------------------------------------------------------------
+*/
 $postData = json_encode($payload);
 
 $ch = curl_init('https://api.gowinston.ai/v2/plagiarism');
@@ -151,29 +278,30 @@ curl_setopt_array($ch, [
     CURLOPT_POST           => true,
     CURLOPT_POSTFIELDS     => $postData,
     CURLOPT_HTTPHEADER     => [
-        'Authorization: Bearer ' . $apiKey,
+        'Authorization: Bearer ' . WINSTON_API_KEY,
         'Content-Type: application/json',
-        'Content-Length: ' . strlen($postData),
+        'Content-Length: ' . strlen((string)$postData),
     ],
     CURLOPT_SSL_VERIFYPEER => true,
     CURLOPT_TIMEOUT        => 120,
 ]);
 
 $response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlErr  = curl_error($ch);
 curl_close($ch);
 
-// Clean up uploaded file after forwarding
-if ($uploadedFilePath && file_exists($uploadedFilePath)) {
-    unlink($uploadedFilePath);
-}
+/*
+|--------------------------------------------------------------------------
+| CLEANUP
+|--------------------------------------------------------------------------
+*/
+safe_unlink($storedPrivatePath);
+safe_unlink($storedPublicPath);
 
 if ($curlErr) {
-    http_response_code(502);
-    echo json_encode(['error' => 'Failed to reach Winston AI: ' . $curlErr]);
-    exit;
+    json_error(502, 'Failed to reach Winston AI: ' . $curlErr);
 }
 
-http_response_code($httpCode);
-echo $response;
+http_response_code($httpCode > 0 ? $httpCode : 500);
+echo $response ?: json_encode(['error' => 'Empty response from Winston AI']);

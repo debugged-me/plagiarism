@@ -4,9 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PlagiaScope — Checker</title>
+  <title>PlagiaScope | AI</title>
   <script src="config.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
     *,
     *::before,
@@ -88,7 +90,6 @@
       transition: background .4s, color .4s;
     }
 
-    /* ── SCROLL BAR ── */
     #spb {
       position: fixed;
       top: 0;
@@ -101,7 +102,6 @@
       box-shadow: 0 0 10px rgba(26, 61, 228, .5);
     }
 
-    /* ── TOPBAR ── */
     .topbar {
       background: var(--nav-bg);
       border-bottom: 1px solid var(--border);
@@ -212,14 +212,12 @@
       transform: translateX(-2px);
     }
 
-    /* ── PAGE ── */
     .page {
       max-width: 880px;
       margin: 0 auto;
       padding: 44px 24px 80px;
     }
 
-    /* ── HEADER ── */
     .pg-header {
       text-align: center;
       margin-bottom: 36px;
@@ -280,7 +278,6 @@
       animation: fadeUp .6s .4s ease both;
     }
 
-    /* ── MODE TABS ── */
     .tabs {
       display: flex;
       background: var(--surface);
@@ -363,7 +360,6 @@
       color: var(--accent);
     }
 
-    /* ── CARD ── */
     .card {
       background: var(--surface);
       border: 1.5px solid var(--border);
@@ -452,7 +448,6 @@
       transition: color .2s;
     }
 
-    /* ── FILE PANEL ── */
     .file-panel {
       display: none;
     }
@@ -625,7 +620,6 @@
       transform: scale(1.1) rotate(90deg);
     }
 
-    /* ── ERR ── */
     .err {
       display: none;
       padding: 13px 16px;
@@ -670,7 +664,29 @@
       }
     }
 
-    /* ── RUN BTN ── */
+    .captcha-wrap {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--sh);
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      animation: fadeUp .5s .58s ease both;
+    }
+
+    .captcha-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .captcha-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
     .run-btn {
       width: 100%;
       height: 56px;
@@ -723,7 +739,6 @@
       box-shadow: none;
     }
 
-    /* ── LOADING ── */
     .loading {
       display: none;
       flex-direction: column;
@@ -924,7 +939,6 @@
       }
     }
 
-    /* ── RESULTS ── */
     .results {
       display: none;
     }
@@ -934,7 +948,6 @@
       animation: fadeUp .5s ease;
     }
 
-    /* Gauge card */
     .origin-card {
       background: var(--surface);
       border: 1.5px solid var(--border);
@@ -1064,7 +1077,6 @@
       }
     }
 
-    /* Score tiles */
     .score-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -1119,7 +1131,6 @@
       color: var(--muted);
     }
 
-    /* Section cards */
     .sec-card {
       background: var(--surface);
       border: 1.5px solid var(--border);
@@ -1220,7 +1231,6 @@
       border-radius: 3px;
     }
 
-    /* Sources */
     .src-item {
       padding: 18px 22px;
       border-bottom: 1.5px solid var(--border);
@@ -1357,7 +1367,6 @@
       vertical-align: middle;
     }
 
-    /* Credits */
     .cred-bar {
       background: var(--surface);
       border: 1.5px solid var(--border);
@@ -1402,7 +1411,6 @@
       color: var(--muted);
     }
 
-    /* Reset */
     .reset-btn {
       width: 100%;
       height: 46px;
@@ -1477,7 +1485,6 @@
 </head>
 
 <body>
-
   <div id="spb"></div>
 
   <nav class="topbar">
@@ -1492,7 +1499,6 @@
   </nav>
 
   <div class="page">
-
     <div class="pg-header">
       <div class="pg-eyebrow">✦ BaiSQL AI · English Research</div>
       <h1 class="pg-title">Research <em>Integrity</em> Checker</h1>
@@ -1500,7 +1506,6 @@
     </div>
 
     <div id="inputSection">
-
       <div class="tabs">
         <button class="tab on" id="tabText" onclick="switchMode('text')">
           ✏️ Paste Text <span class="tab-badge">TXT</span>
@@ -1551,10 +1556,15 @@
 
       <div class="err" id="errBanner"><span>⚠</span><span id="errMsg"></span></div>
 
-      <button class="run-btn" onclick="analyze()">🔍 Analyze for Plagiarism</button>
+      <div class="captcha-wrap">
+        <div class="captcha-title">Human verification</div>
+        <div class="captcha-sub">Please complete the security check before running the scan.</div>
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAACu7HA_zSWn5iEok"></div>
+      </div>
+
+      <button class="run-btn" id="runBtn" onclick="analyze()">🔍 Analyze for Plagiarism</button>
     </div>
 
-    <!-- Loading -->
     <div class="loading" id="loadWrap">
       <div class="scan-wrap">
         <div class="s-arc s-arc-1"></div>
@@ -1584,9 +1594,7 @@
       </div>
     </div>
 
-    <!-- Results -->
     <div class="results" id="resultsSection">
-
       <div class="origin-card">
         <div class="gauge-wrap">
           <svg class="g-svg" width="124" height="124" viewBox="0 0 124 124">
@@ -1636,11 +1644,11 @@
 
       <button class="reset-btn" onclick="resetTool()"><span>← Analyze another text</span></button>
     </div>
-
   </div>
 
   <script>
-    // ── Dark mode ──
+    const TURNSTILE_SITE_KEY = '0x4AAAAAACu7HA_zSWn5iEok';
+
     const htmlEl = document.documentElement;
     const dmBtn = document.getElementById('dmBtn');
     const saved = localStorage.getItem('ps-theme');
@@ -1655,7 +1663,6 @@
       localStorage.setItem('ps-theme', next);
     });
 
-    // ── Scroll progress ──
     window.addEventListener('scroll', () => {
       const tot = document.documentElement.scrollHeight - window.innerHeight;
       document.getElementById('spb').style.width = (window.scrollY / tot * 100) + '%';
@@ -1753,7 +1760,27 @@
       document.getElementById('errBanner').classList.remove('on');
     }
 
-    const phases = ['Connecting to BaiSQL AI…', 'Uploading to scan engine…', 'Comparing text sequences…', 'Identifying matching passages…', 'Scoring originality…', 'Building your report…'];
+    function getTurnstileToken() {
+      const tokenField = document.querySelector('[name="cf-turnstile-response"]');
+      return tokenField ? tokenField.value.trim() : '';
+    }
+
+    function resetTurnstileWidget() {
+      if (window.turnstile) {
+        try {
+          window.turnstile.reset();
+        } catch (e) {}
+      }
+    }
+
+    const phases = [
+      'Connecting to BaiSQL AI…',
+      'Uploading to scan engine…',
+      'Comparing text sequences…',
+      'Identifying matching passages…',
+      'Scoring originality…',
+      'Building your report…'
+    ];
     let phIdx = 0,
       phTimer, segIdx = 0;
 
@@ -1787,24 +1814,28 @@
 
     async function analyze() {
       hideErr();
-      const cfg = getConfig();
-      const key = cfg.apiKey || '';
-      if (!key) {
-        showErr('API key not configured. Edit config.js.');
+
+      const turnstileToken = getTurnstileToken();
+      if (!turnstileToken) {
+        showErr('Please complete the human verification first.');
         return;
       }
 
+      const cfg = getConfig();
       let opts;
+
       if (mode === 'file') {
         if (!selFile) {
           showErr('Please select a file to scan.');
           return;
         }
+
         const fd = new FormData();
-        fd.append('_apiKey', key);
         fd.append('language', cfg.language || 'en');
         fd.append('country', cfg.country || 'us');
         fd.append('file', selFile, selFile.name);
+        fd.append('cf-turnstile-response', turnstileToken);
+
         opts = {
           method: 'POST',
           body: fd
@@ -1823,20 +1854,22 @@
           showErr('Text exceeds 120,000 characters.');
           return;
         }
+
         opts = {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            _apiKey: key,
             text,
             language: cfg.language || 'en',
-            country: cfg.country || 'us'
+            country: cfg.country || 'us',
+            'cf-turnstile-response': turnstileToken
           })
         };
       }
 
+      document.getElementById('runBtn').disabled = true;
       document.getElementById('inputSection').style.display = 'none';
       document.getElementById('loadWrap').classList.add('on');
       document.getElementById('resultsSection').classList.remove('on');
@@ -1845,7 +1878,11 @@
       try {
         const res = await fetch('proxy.php', opts);
         const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || data?.error || `API error ${res.status}`);
+
+        if (!res.ok) {
+          throw new Error(data?.message || data?.error || `API error ${res.status}`);
+        }
+
         stopLoading();
         const txt = data.text || (mode === 'text' ? document.getElementById('mainText').value.trim() : '');
         renderResults(data, txt);
@@ -1853,11 +1890,15 @@
         stopLoading();
         document.getElementById('loadWrap').classList.remove('on');
         document.getElementById('inputSection').style.display = 'block';
-        showErr('Error: ' + (err.message || 'Unexpected error. Check config.js.'));
+        document.getElementById('runBtn').disabled = false;
+        resetTurnstileWidget();
+        showErr('Error: ' + (err.message || 'Unexpected error.'));
       }
     }
 
     function renderResults(data, origText) {
+      document.getElementById('runBtn').disabled = false;
+      resetTurnstileWidget();
       document.getElementById('loadWrap').classList.remove('on');
       document.getElementById('resultsSection').classList.add('on');
 
@@ -1877,10 +1918,10 @@
       let cur = 0;
       const nEl = document.getElementById('gNum');
       nEl.style.color = strokeColor;
-      const t = setInterval(() => {
+      const timer = setInterval(() => {
         cur = Math.min(cur + 1.5, origScore);
         nEl.textContent = Math.round(cur) + '%';
-        if (cur >= origScore) clearInterval(t);
+        if (cur >= origScore) clearInterval(timer);
       }, 16);
 
       const verdict = origScore >= 85 ? 'Highly Original' : origScore >= 70 ? 'Mostly Original' : origScore >= 50 ? 'Partially Plagiarized' : 'High Plagiarism Risk';
@@ -1891,7 +1932,7 @@
 
       const pEl = document.getElementById('mpills');
       pEl.innerHTML = '';
-      [`${result.sourceCounts??sources.length} sources matched`, `${result.textWordCounts??'—'} words scanned`, `${result.totalPlagiarismWords??0} plagiarized words`].forEach(l => {
+      [`${result.sourceCounts ?? sources.length} sources matched`, `${result.textWordCounts ?? '—'} words scanned`, `${result.totalPlagiarismWords ?? 0} plagiarized words`].forEach(l => {
         const e = document.createElement('span');
         e.className = 'mpill';
         e.textContent = l;
@@ -1915,11 +1956,11 @@
           label: 'Similar Words',
           color: '#1a3de4'
         }
-      ].forEach((t, i) => {
+      ].forEach((tile, i) => {
         const d = document.createElement('div');
         d.className = 's-tile';
         d.style.animationDelay = (i * .08) + 's';
-        d.innerHTML = `<div class="tile-v" style="color:${t.color}">${t.val}</div><div class="tile-l">${t.label}</div>`;
+        d.innerHTML = `<div class="tile-v" style="color:${tile.color}">${tile.val}</div><div class="tile-l">${tile.label}</div>`;
         sRow.appendChild(d);
       });
 
@@ -1933,15 +1974,15 @@
       if (origText && indexes.length > 0) {
         const sorted = [...indexes].sort((a, b) => a.startIndex - b.startIndex);
         let html = '',
-          cur = 0;
+          ptr = 0;
         sorted.forEach(idx => {
-          if (idx.startIndex > cur) html += esc(origText.slice(cur, idx.startIndex));
-          html += `<mark class="plag" title="Plagiarized passage">${esc(origText.slice(idx.startIndex,idx.endIndex))}</mark>`;
-          cur = idx.endIndex;
+          if (idx.startIndex > ptr) html += esc(origText.slice(ptr, idx.startIndex));
+          html += `<mark class="plag" title="Plagiarized passage">${esc(origText.slice(idx.startIndex, idx.endIndex))}</mark>`;
+          ptr = idx.endIndex;
         });
-        if (cur < origText.length) html += esc(origText.slice(cur));
+        if (ptr < origText.length) html += esc(origText.slice(ptr));
         aEl.innerHTML = html;
-        document.getElementById('annoSub').textContent = `${indexes.length} passage${indexes.length!==1?'s':''} flagged`;
+        document.getElementById('annoSub').textContent = `${indexes.length} passage${indexes.length !== 1 ? 's' : ''} flagged`;
       } else if (origText) {
         aEl.textContent = origText;
         document.getElementById('annoSub').textContent = 'No plagiarism detected';
@@ -1951,41 +1992,47 @@
 
       const sEl = document.getElementById('srcList');
       sEl.innerHTML = '';
-      document.getElementById('srcCount').textContent = sources.length ? `${sources.length} source${sources.length!==1?'s':'`'}`:'' ;
+      document.getElementById('srcCount').textContent = sources.length ? `${sources.length} source${sources.length !== 1 ? 's' : ''}` : '';
 
-  if(!sources.length){
-    sEl.innerHTML='<div class="empty">✓ No matching sources found — your text appears original.</div>';
-  }else{
-    [...sources].sort((a,b)=>(b.score??0)-(a.score??0)).forEach((src,i)=>{
-      const item=document.createElement('div');item.className='src-item';item.style.animationDelay=(i*.06)+'s';
-      const sv=typeof src.score==='number'?src.score.toFixed(1)+'%':'—';
-      const ct=src.citation?` < span class = "cite-tag" > ✓cited < /span>`:'';
-      const sq = (src.plagiarismFound || []).slice(0, 3).map(p => `<div class="src-seq">"${esc(p.sequence)}"</div>`).join('');
-      item.innerHTML = `
-        <div class="src-rank">${String(i+1).padStart(2,'0')}</div>
-        <div>
-          <div class="src-title">${esc(src.title||'Untitled source')}${ct}</div>
-          <a class="src-url" href="${esc(src.url||'#')}" target="_blank" rel="noopener">${esc(src.url||'')}</a>
-          ${src.description?`<div class="src-desc">${esc(src.description)}</div>`:''}
-          ${sq?`<div class="src-seqs">${sq}</div>`:''}
-        </div>
-        <div class="src-score">
-          <div class="src-pct">${sv}</div>
-          <div class="src-pct-l">match</div>
-          <div class="src-w">${src.plagiarismWords??0} words</div>
-        </div>`;
-      sEl.appendChild(item);
-    });
-    }
+      if (!sources.length) {
+        sEl.innerHTML = '<div class="empty">✓ No matching sources found — your text appears original.</div>';
+      } else {
+        [...sources].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).forEach((src, i) => {
+          const item = document.createElement('div');
+          item.className = 'src-item';
+          item.style.animationDelay = (i * .06) + 's';
+          const sv = typeof src.score === 'number' ? src.score.toFixed(1) + '%' : '—';
+          const ct = src.citation ? `<span class="cite-tag">✓ cited</span>` : '';
+          const sq = (src.plagiarismFound || []).slice(0, 3).map(p => `<div class="src-seq">"${esc(p.sequence)}"</div>`).join('');
+          item.innerHTML = `
+            <div class="src-rank">${String(i + 1).padStart(2, '0')}</div>
+            <div>
+              <div class="src-title">${esc(src.title || 'Untitled source')}${ct}</div>
+              <a class="src-url" href="${esc(src.url || '#')}" target="_blank" rel="noopener">${esc(src.url || '')}</a>
+              ${src.description ? `<div class="src-desc">${esc(src.description)}</div>` : ''}
+              ${sq ? `<div class="src-seqs">${sq}</div>` : ''}
+            </div>
+            <div class="src-score">
+              <div class="src-pct">${sv}</div>
+              <div class="src-pct-l">match</div>
+              <div class="src-w">${src.plagiarismWords ?? 0} words</div>
+            </div>`;
+          sEl.appendChild(item);
+        });
+      }
 
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     }
 
     function esc(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
     function resetTool() {
@@ -1996,6 +2043,8 @@
       document.getElementById('annoCard').style.display = '';
       document.getElementById('inputSection').style.display = 'block';
       document.getElementById('resultsSection').classList.remove('on');
+      document.getElementById('runBtn').disabled = false;
+      resetTurnstileWidget();
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
