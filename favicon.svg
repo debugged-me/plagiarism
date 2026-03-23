@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 680" width="680" height="680">
+  <!-- Outer rounded square background -->
+  <rect x="0" y="0" width="680" height="680" rx="156" fill="#1a3de4"/>
+
+  <!-- Edge depth -->
+  <rect x="0" y="0" width="680" height="680" rx="156" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="8"/>
+
+  <!-- Bottom depth shading -->
+  <rect x="0" y="380" width="680" height="300" rx="0" fill="rgba(0,0,0,0.07)"/>
+
+  <!-- Top shine -->
+  <ellipse cx="580" cy="110" rx="80" ry="50" fill="rgba(255,255,255,0.06)" transform="rotate(-20 580 110)"/>
+
+  <!-- Lens track ring -->
+  <circle cx="290" cy="280" r="148" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="28"/>
+
+  <!-- Lens arc (partial — scanning feel) -->
+  <circle cx="290" cy="280" r="148"
+    fill="none"
+    stroke="white"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-dasharray="700"
+    stroke-dashoffset="190"
+    transform="rotate(-90 290 280)"/>
+
+  <!-- Lens fill -->
+  <circle cx="290" cy="280" r="132" fill="rgba(255,255,255,0.13)"/>
+
+  <!-- Inner detail ring -->
+  <circle cx="290" cy="280" r="90" fill="none" stroke="rgba(255,255,255,0.11)" stroke-width="16"/>
+
+  <!-- Document scan lines inside lens -->
+  <rect x="256" y="236" width="80" height="14" rx="7" fill="rgba(255,255,255,0.9)"/>
+  <rect x="256" y="264" width="56" height="14" rx="7" fill="rgba(255,255,255,0.65)"/>
+  <rect x="256" y="292" width="68" height="14" rx="7" fill="rgba(255,255,255,0.5)"/>
+
+  <!-- Lens shine -->
+  <ellipse cx="244" cy="230" rx="28" ry="18" fill="rgba(255,255,255,0.28)" transform="rotate(-30 244 230)"/>
+
+  <!-- Handle shadow -->
+  <rect x="392" y="376" width="46" height="138" rx="23" fill="rgba(0,0,0,0.18)" transform="rotate(45 415 445)"/>
+
+  <!-- Handle -->
+  <rect x="388" y="372" width="46" height="138" rx="23" fill="white" transform="rotate(45 411 441)"/>
+</svg>
