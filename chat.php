@@ -1549,10 +1549,10 @@
     <div id="inputSection">
       <div class="tabs">
         <button class="tab on" id="tabText" onclick="switchMode('text')">
-          ✏️ Paste Text <span class="tab-badge">TXT</span>
+          Paste Text <span class="tab-badge">TXT</span>
         </button>
         <button class="tab" id="tabFile" onclick="switchMode('file')">
-          📎 Upload File <span class="tab-badge">PDF · DOC · DOCX</span>
+          Upload File <span class="tab-badge">PDF · DOC · DOCX</span>
         </button>
       </div>
 
@@ -1603,7 +1603,7 @@
         <div class="cf-turnstile" data-sitekey="0x4AAAAAACu7HA_zSWn5iEok"></div>
       </div>
 
-      <button class="run-btn" id="runBtn" onclick="analyze()">🔍 Analyze for Plagiarism</button>
+      <button class="run-btn" id="runBtn" onclick="analyze()"> Analyze for Plagiarism</button>
     </div>
 
     <div class="loading" id="loadWrap">
