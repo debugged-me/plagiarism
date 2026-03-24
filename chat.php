@@ -7,7 +7,7 @@
   <title>PlagiaScope | AI</title>
   <script src="config.js"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Shippori+Mincho:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
     *,
@@ -47,6 +47,11 @@
       --r: 14px;
       --rs: 9px;
       --rx: 7px;
+
+      /* Font stacks */
+      --font-display: 'Shippori Mincho B1', 'Shippori Mincho', serif;
+      --font-body: 'Noto Sans JP', sans-serif;
+      --font-mono: 'Zen Kaku Gothic New', monospace;
     }
 
     [data-theme="dark"] {
@@ -84,7 +89,7 @@
     body {
       background: var(--bg);
       color: var(--ink);
-      font-family: 'Inter', sans-serif;
+      font-family: var(--font-body);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
       transition: background .4s, color .4s;
@@ -155,9 +160,10 @@
     }
 
     .brand-name {
-      font-family: 'Playfair Display', serif;
+      font-family: var(--font-display);
       font-size: 19px;
-      letter-spacing: -.02em;
+      font-weight: 700;
+      letter-spacing: .04em;
       color: var(--ink);
     }
 
@@ -192,8 +198,10 @@
     }
 
     .back-link {
+      font-family: var(--font-mono);
       font-size: 13px;
       font-weight: 600;
+      letter-spacing: .04em;
       color: var(--muted);
       text-decoration: none;
       padding: 7px 13px;
@@ -244,19 +252,19 @@
       background: var(--acc-soft);
       border: 1.5px solid var(--acc-brd);
       border-radius: 100px;
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
-      letter-spacing: .08em;
+      letter-spacing: .1em;
       color: var(--accent);
       margin-bottom: 14px;
       animation: fadeUp .5s .2s ease both;
     }
 
     .pg-title {
-      font-family: 'Playfair Display', serif;
+      font-family: var(--font-display);
       font-size: clamp(28px, 5vw, 46px);
-      font-weight: 400;
-      letter-spacing: -.035em;
+      font-weight: 700;
+      letter-spacing: .02em;
       line-height: 1.08;
       color: var(--ink);
       margin-bottom: 10px;
@@ -269,12 +277,13 @@
     }
 
     .pg-sub {
+      font-family: var(--font-body);
       font-size: 15px;
       font-weight: 400;
       color: var(--muted);
       max-width: 400px;
       margin: 0 auto;
-      line-height: 1.65;
+      line-height: 1.75;
       animation: fadeUp .6s .4s ease both;
     }
 
@@ -295,9 +304,10 @@
       background: transparent;
       border: none;
       border-right: 1.5px solid var(--border);
-      font-family: 'Inter', sans-serif;
-      font-size: 13.5px;
+      font-family: var(--font-mono);
+      font-size: 13px;
       font-weight: 600;
+      letter-spacing: .04em;
       color: var(--muted);
       cursor: pointer;
       display: flex;
@@ -346,7 +356,7 @@
     }
 
     .tab-badge {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 10px;
       padding: 2px 8px;
       border-radius: 100px;
@@ -402,15 +412,19 @@
     }
 
     .card-title {
+      font-family: var(--font-display);
       font-size: 14px;
       font-weight: 700;
+      letter-spacing: .02em;
       color: var(--ink);
     }
 
     .card-sub {
-      font-size: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
       color: var(--muted);
-      margin-top: 1px;
+      margin-top: 2px;
+      letter-spacing: .04em;
     }
 
     textarea {
@@ -419,9 +433,9 @@
       border: none;
       resize: none;
       color: var(--ink2);
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 13px;
-      line-height: 1.8;
+      line-height: 1.9;
       padding: 20px;
       outline: none;
       min-height: 200px;
@@ -437,10 +451,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--faint);
       background: var(--s2);
+      letter-spacing: .04em;
     }
 
     .wn {
@@ -512,13 +527,16 @@
     }
 
     .drop-title {
+      font-family: var(--font-display);
       font-size: 15px;
       font-weight: 700;
       color: var(--ink);
       margin-bottom: 6px;
+      letter-spacing: .02em;
     }
 
     .drop-sub {
+      font-family: var(--font-body);
       font-size: 13px;
       color: var(--muted);
       line-height: 1.6;
@@ -531,7 +549,7 @@
     }
 
     .type-tag {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 500;
       padding: 4px 11px;
@@ -540,6 +558,7 @@
       background: var(--acc-soft);
       color: var(--accent);
       transition: all .2s;
+      letter-spacing: .06em;
     }
 
     .drop:hover .type-tag {
@@ -583,6 +602,7 @@
     }
 
     .fprev-name {
+      font-family: var(--font-display);
       font-size: 14px;
       font-weight: 700;
       color: var(--ink);
@@ -592,10 +612,11 @@
     }
 
     .fprev-size {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--muted);
       margin-top: 2px;
+      letter-spacing: .04em;
     }
 
     .frem {
@@ -626,6 +647,7 @@
       background: var(--dbg);
       border: 1.5px solid var(--dbrd);
       border-radius: var(--rs);
+      font-family: var(--font-body);
       font-size: 13px;
       font-weight: 600;
       color: var(--danger);
@@ -675,13 +697,16 @@
     }
 
     .captcha-title {
+      font-family: var(--font-display);
       font-size: 13px;
       font-weight: 700;
       color: var(--ink);
       margin-bottom: 6px;
+      letter-spacing: .02em;
     }
 
     .captcha-sub {
+      font-family: var(--font-body);
       font-size: 12px;
       color: var(--muted);
       margin-bottom: 12px;
@@ -693,10 +718,10 @@
       background: var(--accent);
       border: none;
       border-radius: var(--r);
-      font-family: 'Playfair Display', serif;
+      font-family: var(--font-display);
       font-size: 20px;
-      font-weight: 400;
-      letter-spacing: -.01em;
+      font-weight: 700;
+      letter-spacing: .04em;
       color: #fff;
       cursor: pointer;
       display: flex;
@@ -839,19 +864,21 @@
 
     .ld-text {
       text-align: center;
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 12px;
       color: var(--muted);
+      letter-spacing: .06em;
     }
 
     .ld-text strong {
       display: block;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
+      font-family: var(--font-display);
+      font-size: 15px;
       font-weight: 700;
       color: var(--ink2);
       margin-bottom: 5px;
       animation: phPop .4s ease;
+      letter-spacing: .04em;
     }
 
     @keyframes phPop {
@@ -999,32 +1026,33 @@
     }
 
     .g-num {
-      font-family: 'Playfair Display', serif;
+      font-family: var(--font-display);
       font-size: 30px;
-      font-weight: 400;
+      font-weight: 700;
       line-height: 1;
-      letter-spacing: -.02em;
+      letter-spacing: .02em;
     }
 
     .g-lbl {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 9px;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: .1em;
+      letter-spacing: .12em;
       margin-top: 4px;
     }
 
     .o-verdict {
-      font-family: 'Playfair Display', serif;
+      font-family: var(--font-display);
       font-size: 28px;
-      font-weight: 400;
-      letter-spacing: -.02em;
+      font-weight: 700;
+      letter-spacing: .02em;
       margin-bottom: 8px;
       line-height: 1.15;
     }
 
     .o-desc {
+      font-family: var(--font-body);
       font-size: 14px;
       color: var(--muted);
       line-height: 1.7;
@@ -1038,7 +1066,7 @@
     }
 
     .mpill {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       padding: 4px 11px;
       border-radius: 100px;
@@ -1047,6 +1075,7 @@
       color: var(--accent);
       animation: pPop .4s cubic-bezier(.34, 1.56, .64, 1) both;
       transition: transform .2s;
+      letter-spacing: .05em;
     }
 
     .mpill:hover {
@@ -1114,20 +1143,20 @@
     }
 
     .tile-v {
-      font-family: 'Playfair Display', serif;
+      font-family: var(--font-display);
       font-size: 40px;
-      font-weight: 400;
-      letter-spacing: -.03em;
+      font-weight: 700;
+      letter-spacing: .02em;
       line-height: 1;
       margin-bottom: 6px;
     }
 
     .tile-l {
+      font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 600;
-      font-family: 'Space Mono', monospace;
       text-transform: uppercase;
-      letter-spacing: .09em;
+      letter-spacing: .1em;
       color: var(--muted);
     }
 
@@ -1152,26 +1181,27 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: .09em;
+      letter-spacing: .1em;
       text-transform: uppercase;
       color: var(--muted);
       background: var(--s2);
-      font-family: 'Space Mono', monospace;
     }
 
     .sec-r {
+      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--faint);
       text-transform: none;
-      letter-spacing: 0;
+      letter-spacing: .04em;
       font-weight: 400;
     }
 
     .anno-body {
       padding: 22px;
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 13px;
       line-height: 2.1;
       color: var(--ink2);
@@ -1220,9 +1250,10 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 10.5px;
       color: var(--muted);
+      letter-spacing: .04em;
     }
 
     .leg-d {
@@ -1251,24 +1282,27 @@
     }
 
     .src-rank {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--faint);
       min-width: 26px;
       padding-top: 2px;
       font-weight: 500;
+      letter-spacing: .04em;
     }
 
     .src-title {
+      font-family: var(--font-display);
       font-size: 14px;
       font-weight: 700;
       color: var(--ink);
       margin-bottom: 3px;
       line-height: 1.4;
+      letter-spacing: .02em;
     }
 
     .src-url {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--accent);
       text-decoration: none;
@@ -1278,6 +1312,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       max-width: 520px;
+      letter-spacing: .02em;
     }
 
     .src-url:hover {
@@ -1285,6 +1320,7 @@
     }
 
     .src-desc {
+      font-family: var(--font-body);
       font-size: 12.5px;
       color: var(--muted);
       line-height: 1.6;
@@ -1299,7 +1335,7 @@
     }
 
     .src-seq {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       color: #b91c1c;
       background: rgba(212, 32, 32, .07);
@@ -1327,25 +1363,25 @@
     }
 
     .src-pct {
-      font-family: 'Playfair Display', serif;
+      font-family: var(--font-display);
       font-size: 24px;
-      font-weight: 400;
-      letter-spacing: -.02em;
+      font-weight: 700;
+      letter-spacing: .02em;
       color: var(--danger);
       line-height: 1;
     }
 
     .src-pct-l {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 9px;
       color: var(--faint);
       text-transform: uppercase;
-      letter-spacing: .07em;
+      letter-spacing: .1em;
       margin-top: 3px;
     }
 
     .src-w {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 10px;
       color: var(--faint);
       margin-top: 4px;
@@ -1355,7 +1391,7 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 10px;
       font-weight: 500;
       padding: 2px 9px;
@@ -1377,6 +1413,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 14px;
+      font-family: var(--font-body);
       font-size: 13px;
       color: var(--muted);
       flex-wrap: wrap;
@@ -1385,28 +1422,31 @@
     }
 
     .cred-used {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       padding: 3px 11px;
       background: var(--wbg);
       border: 1.5px solid var(--wbrd);
       color: var(--warn);
       border-radius: 100px;
+      letter-spacing: .05em;
     }
 
     .cred-left {
-      font-family: 'Space Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       padding: 3px 11px;
       background: var(--okbg);
       border: 1.5px solid var(--okbrd);
       color: var(--ok);
       border-radius: 100px;
+      letter-spacing: .05em;
     }
 
     .empty {
       padding: 44px 24px;
       text-align: center;
+      font-family: var(--font-body);
       font-size: 14px;
       color: var(--muted);
     }
@@ -1417,9 +1457,10 @@
       background: transparent;
       border: 1.5px solid var(--border);
       border-radius: var(--r);
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
       font-weight: 600;
+      letter-spacing: .06em;
       color: var(--muted);
       cursor: pointer;
       transition: all .2s;
@@ -1500,7 +1541,7 @@
 
   <div class="page">
     <div class="pg-header">
-      <div class="pg-eyebrow">✦ BaiSQL AI · English Research</div>
+      <div class="pg-eyebrow">✦ Winston AI · English Research</div>
       <h1 class="pg-title">Research <em>Integrity</em> Checker</h1>
       <p class="pg-sub">Paste your text or upload a file — get your plagiarism report in seconds.</p>
     </div>
@@ -1576,7 +1617,7 @@
         <div class="s-center">🔍</div>
       </div>
       <div class="ld-text">
-        <strong id="ldPhase">Connecting to BaiSQL AI…</strong>
+        <strong id="ldPhase">Connecting to Winston AI…</strong>
         Scanning against 400 billion sources
         <div class="ld-dots">
           <div class="ld-dot"></div>
@@ -1774,7 +1815,7 @@
     }
 
     const phases = [
-      'Connecting to BaiSQL AI…',
+      'Connecting to Winston AI…',
       'Uploading to scan engine…',
       'Comparing text sequences…',
       'Identifying matching passages…',
@@ -1814,13 +1855,11 @@
 
     async function analyze() {
       hideErr();
-
       const turnstileToken = getTurnstileToken();
       if (!turnstileToken) {
         showErr('Please complete the human verification first.');
         return;
       }
-
       const cfg = getConfig();
       let opts;
 
@@ -1829,13 +1868,11 @@
           showErr('Please select a file to scan.');
           return;
         }
-
         const fd = new FormData();
         fd.append('language', cfg.language || 'en');
         fd.append('country', cfg.country || 'us');
         fd.append('file', selFile, selFile.name);
         fd.append('cf-turnstile-response', turnstileToken);
-
         opts = {
           method: 'POST',
           body: fd
@@ -1854,7 +1891,6 @@
           showErr('Text exceeds 120,000 characters.');
           return;
         }
-
         opts = {
           method: 'POST',
           headers: {
@@ -1878,11 +1914,7 @@
       try {
         const res = await fetch('proxy', opts);
         const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data?.message || data?.error || `API error ${res.status}`);
-        }
-
+        if (!res.ok) throw new Error(data?.message || data?.error || `API error ${res.status}`);
         stopLoading();
         const txt = data.text || (mode === 'text' ? document.getElementById('mainText').value.trim() : '');
         renderResults(data, txt);
@@ -2028,11 +2060,7 @@
     }
 
     function esc(s) {
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     function resetTool() {

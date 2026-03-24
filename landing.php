@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlagiaScope | AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Antique&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <style>
         *,
@@ -39,6 +39,11 @@
             --sh: 0 2px 12px rgba(14, 12, 9, 0.08);
             --sh2: 0 8px 32px rgba(14, 12, 9, 0.1);
             --sh3: 0 24px 64px rgba(14, 12, 9, 0.12);
+
+            /* Font stacks */
+            --font-display: 'Shippori Mincho B1', 'Shippori Mincho', serif;
+            --font-body: 'Noto Sans JP', sans-serif;
+            --font-mono: 'Zen Kaku Gothic New', monospace;
         }
 
         [data-theme="dark"] {
@@ -73,7 +78,7 @@
         body {
             background: var(--bg);
             color: var(--ink);
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-body);
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             transition: background .4s, color .4s;
@@ -99,7 +104,6 @@
             pointer-events: none;
         }
 
-        /* Pulsing background radial */
         #loader::before {
             content: '';
             position: absolute;
@@ -121,7 +125,6 @@
             }
         }
 
-        /* ── Orbital rings wrap ── */
         .ld-rings {
             position: relative;
             width: 110px;
@@ -163,7 +166,6 @@
             }
         }
 
-        /* Orbiting dot */
         .ld-orbit {
             position: absolute;
             inset: 4px;
@@ -182,7 +184,6 @@
             box-shadow: 0 0 10px rgba(26, 61, 228, .8);
         }
 
-        /* Center icon with radar pulse */
         .ld-center {
             position: absolute;
             inset: 34px;
@@ -209,11 +210,10 @@
             }
         }
 
-        /* Title & bar */
         .ld-title {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: 22px;
-            letter-spacing: -.02em;
+            letter-spacing: .02em;
             color: var(--ink);
             margin-bottom: 6px;
             opacity: 0;
@@ -226,9 +226,9 @@
         }
 
         .ld-sub {
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 11px;
-            letter-spacing: .1em;
+            letter-spacing: .14em;
             text-transform: uppercase;
             color: var(--faint);
             margin-bottom: 24px;
@@ -236,7 +236,6 @@
             animation: ldFade .5s .45s ease both;
         }
 
-        /* Segmented progress bar */
         .ld-segs {
             display: flex;
             gap: 5px;
@@ -377,10 +376,11 @@
         }
 
         .nav-logo-text {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: 21px;
-            letter-spacing: -.02em;
+            letter-spacing: .04em;
             color: var(--ink);
+            font-weight: 700;
         }
 
         .nav-logo-text em {
@@ -396,9 +396,10 @@
         }
 
         .nav-links a {
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: .01em;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: .06em;
             color: var(--muted);
             text-decoration: none;
             transition: color .2s;
@@ -456,8 +457,8 @@
             background: var(--accent);
             border: none;
             border-radius: 11px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
+            font-family: var(--font-mono);
+            font-size: 13px;
             font-weight: 700;
             color: #fff;
             cursor: pointer;
@@ -468,7 +469,7 @@
             transition: all .22s;
             position: relative;
             overflow: hidden;
-            letter-spacing: .01em;
+            letter-spacing: .04em;
         }
 
         .nav-cta::before {
@@ -512,7 +513,6 @@
             overflow: hidden;
         }
 
-        /* Noise texture overlay */
         .hero::before {
             content: '';
             position: absolute;
@@ -523,7 +523,6 @@
             z-index: 0;
         }
 
-        /* Animated dot grid */
         .hero-dots {
             position: absolute;
             inset: 0;
@@ -542,7 +541,6 @@
             }
         }
 
-        /* Radial colour blobs */
         .blob {
             position: absolute;
             border-radius: 50%;
@@ -570,7 +568,6 @@
             background: rgba(26, 61, 228, .07);
             top: -300px;
             left: -300px;
-            animation-delay: .4s;
             animation: blobIn 2s .4s ease both, floatA 12s ease-in-out infinite;
         }
 
@@ -580,7 +577,6 @@
             background: rgba(79, 123, 251, .05);
             bottom: -200px;
             right: -200px;
-            animation-delay: .6s;
             animation: blobIn 2s .6s ease both, floatB 14s ease-in-out infinite;
         }
 
@@ -590,7 +586,6 @@
             background: rgba(26, 61, 228, .04);
             top: 40%;
             left: 60%;
-            animation-delay: .8s;
             animation: blobIn 2s .8s ease both, floatC 10s ease-in-out infinite;
         }
 
@@ -636,7 +631,6 @@
             max-width: 860px;
         }
 
-        /* Status pill */
         .hero-pill {
             display: inline-flex;
             align-items: center;
@@ -645,9 +639,9 @@
             background: var(--surface);
             border: 1.5px solid var(--acc-brd);
             border-radius: 100px;
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 11.5px;
-            letter-spacing: .06em;
+            letter-spacing: .08em;
             color: var(--accent);
             margin-bottom: 40px;
             box-shadow: var(--sh);
@@ -688,12 +682,12 @@
             }
         }
 
-        /* Giant headline */
+        /* Giant headline — now uses Shippori Mincho B1 */
         .hero-h1 {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: clamp(56px, 9vw, 110px);
-            font-weight: 400;
-            letter-spacing: -.04em;
+            font-weight: 800;
+            letter-spacing: .01em;
             line-height: .96;
             color: var(--ink);
             margin-bottom: 28px;
@@ -720,7 +714,6 @@
             display: inline-block;
         }
 
-        /* Underline reveal */
         .hero-h1 .word-em::after {
             content: '';
             position: absolute;
@@ -745,6 +738,7 @@
         .hero-h1 .word-fade {
             display: block;
             color: var(--faint);
+            font-weight: 400;
             animation: fadeLine .8s 2s ease both;
         }
 
@@ -760,12 +754,12 @@
             }
         }
 
-        /* Sub */
         .hero-sub {
+            font-family: var(--font-body);
             font-size: clamp(16px, 2vw, 20px);
             font-weight: 400;
             color: var(--muted);
-            line-height: 1.7;
+            line-height: 1.8;
             max-width: 540px;
             margin: 0 auto 48px;
             opacity: 0;
@@ -795,7 +789,6 @@
             border-radius: 3px;
         }
 
-        /* CTAs */
         .hero-ctas {
             display: flex;
             align-items: center;
@@ -812,10 +805,10 @@
             background: var(--accent);
             border: none;
             border-radius: 14px;
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
+            font-family: var(--font-mono);
+            font-size: 14px;
             font-weight: 700;
-            letter-spacing: .01em;
+            letter-spacing: .06em;
             color: #fff;
             cursor: pointer;
             text-decoration: none;
@@ -865,9 +858,10 @@
             background: transparent;
             border: 2px solid var(--border);
             border-radius: 14px;
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: .04em;
             color: var(--ink2);
             cursor: pointer;
             text-decoration: none;
@@ -884,7 +878,6 @@
             transform: translateY(-2px);
         }
 
-        /* Stats strip */
         .stats-strip {
             display: flex;
             align-items: center;
@@ -922,9 +915,10 @@
         }
 
         .stat-n {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: 36px;
-            letter-spacing: -.03em;
+            font-weight: 700;
+            letter-spacing: .02em;
             color: var(--accent);
             line-height: 1;
             margin-bottom: 4px;
@@ -937,21 +931,20 @@
 
         .stat-l {
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 500;
             color: var(--faint);
-            letter-spacing: .1em;
+            letter-spacing: .12em;
             text-transform: uppercase;
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
         }
 
-        /* ─── MARQUEE STRIP ─── */
+        /* ─── MARQUEE ─── */
         .marquee-wrap {
             padding: 32px 0;
             border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
             overflow: hidden;
             background: var(--surface);
-            margin-bottom: 0;
         }
 
         .marquee-track {
@@ -978,10 +971,10 @@
         .marquee-item {
             white-space: nowrap;
             padding: 0 40px;
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 12px;
             font-weight: 500;
-            letter-spacing: .12em;
+            letter-spacing: .14em;
             text-transform: uppercase;
             color: var(--faint);
             display: flex;
@@ -995,7 +988,7 @@
             font-size: 18px;
         }
 
-        /* ─── DEMO PREVIEW ─── */
+        /* ─── DEMO SECTION ─── */
         .demo-section {
             padding: 80px 24px 100px;
             max-width: 1060px;
@@ -1006,7 +999,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 11px;
             font-weight: 500;
             letter-spacing: .14em;
@@ -1026,10 +1019,10 @@
         }
 
         .section-h {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: clamp(34px, 5vw, 58px);
-            font-weight: 400;
-            letter-spacing: -.035em;
+            font-weight: 700;
+            letter-spacing: .01em;
             line-height: 1.05;
             color: var(--ink);
             margin-bottom: 16px;
@@ -1041,10 +1034,11 @@
         }
 
         .section-p {
+            font-family: var(--font-body);
             font-size: 17px;
             font-weight: 400;
             color: var(--muted);
-            line-height: 1.7;
+            line-height: 1.8;
             max-width: 500px;
             margin-bottom: 52px;
         }
@@ -1108,7 +1102,7 @@
             border: 1.5px solid var(--border);
             border-radius: 8px;
             padding: 6px 14px;
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 12px;
             color: var(--faint);
             text-align: center;
@@ -1134,7 +1128,7 @@
             border: 1.5px solid var(--border);
             border-radius: 14px;
             padding: 18px;
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 11.5px;
             line-height: 1.9;
             color: var(--muted);
@@ -1171,8 +1165,10 @@
             align-items: center;
             justify-content: center;
             gap: 9px;
-            font-size: 14px;
+            font-family: var(--font-mono);
+            font-size: 13px;
             font-weight: 700;
+            letter-spacing: .06em;
             color: #fff;
             position: relative;
             overflow: hidden;
@@ -1237,15 +1233,17 @@
 
         .b-gauge-n {
             position: relative;
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: 14px;
+            font-weight: 700;
             color: var(--ink);
             z-index: 1;
         }
 
         .b-verdict {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: 16px;
+            font-weight: 600;
             margin-bottom: 3px;
         }
 
@@ -1253,6 +1251,7 @@
             font-size: 11.5px;
             color: var(--muted);
             line-height: 1.5;
+            font-family: var(--font-body);
         }
 
         .b-findings {
@@ -1269,6 +1268,7 @@
             display: flex;
             align-items: flex-start;
             gap: 10px;
+            font-family: var(--font-body);
             font-size: 12px;
             color: var(--ink2);
             line-height: 1.55;
@@ -1361,7 +1361,6 @@
             transition-delay: .24s;
         }
 
-        /* Accent top bar */
         .step::before {
             content: '';
             position: absolute;
@@ -1384,7 +1383,6 @@
             transform: scaleX(1);
         }
 
-        /* Mouse-track glow */
         .step::after {
             content: '';
             position: absolute;
@@ -1400,9 +1398,10 @@
         }
 
         .step-num {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: 54px;
-            letter-spacing: -.04em;
+            font-weight: 800;
+            letter-spacing: .02em;
             color: var(--acc-brd);
             line-height: 1;
             margin-bottom: 20px;
@@ -1433,18 +1432,20 @@
         }
 
         .step-title {
+            font-family: var(--font-display);
             font-size: 16px;
             font-weight: 700;
             color: var(--ink);
             margin-bottom: 9px;
-            letter-spacing: -.01em;
+            letter-spacing: .02em;
         }
 
         .step-desc {
+            font-family: var(--font-body);
             font-size: 14px;
             font-weight: 400;
             color: var(--muted);
-            line-height: 1.7;
+            line-height: 1.8;
         }
 
         /* ─── FEATURES ─── */
@@ -1546,24 +1547,26 @@
         }
 
         .feat-title {
+            font-family: var(--font-display);
             font-size: 16px;
             font-weight: 700;
             color: var(--ink);
             margin-bottom: 9px;
-            letter-spacing: -.01em;
+            letter-spacing: .02em;
         }
 
         .feat-desc {
+            font-family: var(--font-body);
             font-size: 14px;
             font-weight: 400;
             color: var(--muted);
-            line-height: 1.7;
+            line-height: 1.8;
         }
 
         .feat-tag {
             display: inline-block;
             margin-top: 16px;
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 10.5px;
             font-weight: 500;
             padding: 4px 11px;
@@ -1572,6 +1575,7 @@
             color: var(--accent);
             border-radius: 100px;
             transition: all .2s;
+            letter-spacing: .06em;
         }
 
         .feat:hover .feat-tag {
@@ -1580,7 +1584,7 @@
             color: #fff;
         }
 
-        /* ─── CTA BLOCK ─── */
+        /* ─── CTA ─── */
         .cta-section {
             padding: 0 24px 120px;
             max-width: 1060px;
@@ -1604,7 +1608,6 @@
             transform: none;
         }
 
-        /* Moving mesh inside CTA */
         .cta-mesh {
             position: absolute;
             inset: 0;
@@ -1673,7 +1676,7 @@
         }
 
         .cta-eyebrow {
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 11px;
             letter-spacing: .18em;
             text-transform: uppercase;
@@ -1682,10 +1685,10 @@
         }
 
         .cta-h {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: clamp(32px, 5.5vw, 60px);
-            font-weight: 400;
-            letter-spacing: -.035em;
+            font-weight: 700;
+            letter-spacing: .02em;
             line-height: 1.08;
             color: #fff;
             margin-bottom: 16px;
@@ -1697,10 +1700,11 @@
         }
 
         .cta-p {
+            font-family: var(--font-body);
             font-size: 17px;
             font-weight: 400;
             color: rgba(255, 255, 255, .55);
-            line-height: 1.7;
+            line-height: 1.8;
             max-width: 420px;
             margin: 0 auto 36px;
         }
@@ -1711,10 +1715,10 @@
             background: #fff;
             border: none;
             border-radius: 14px;
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
+            font-family: var(--font-mono);
+            font-size: 14px;
             font-weight: 700;
-            letter-spacing: .01em;
+            letter-spacing: .06em;
             color: var(--accent);
             cursor: pointer;
             text-decoration: none;
@@ -1788,8 +1792,9 @@
         }
 
         .ft-name {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-display);
             font-size: 17px;
+            font-weight: 600;
             color: var(--ink);
         }
 
@@ -1799,7 +1804,7 @@
         }
 
         .ft-copy {
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 11.5px;
             color: var(--faint);
         }
@@ -1836,7 +1841,6 @@
             transform: translateY(-3px) scale(1.05);
         }
 
-        /* ─── REVEAL ─── */
         .reveal {
             opacity: 0;
             transform: translateY(30px);
@@ -1942,7 +1946,7 @@
     <div id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
 
     <nav id="mainNav">
-        <a class="nav-brand" href="#">
+        <a class="nav-brand" href="landing">
             <div class="nav-icon">🔍</div>
             <div class="nav-logo-text">Plagia<em>Scope</em></div>
         </a>
@@ -1952,59 +1956,54 @@
         </ul>
         <div class="nav-r">
             <button class="dm-btn" id="dmBtn">🌙</button>
-            <a class="nav-cta" href="/chat">Open Checker <span class="arr">→</span></a>
-
+            <a class="nav-cta" href="chat.php">Open Checker <span class="arr">→</span></a>
         </div>
     </nav>
 
-    <!-- ══ HERO ══ -->
     <section class="hero">
         <div class="hero-dots"></div>
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
         <div class="blob blob-3"></div>
 
-        <div class="hero-inner">
-            <div class="hero-pill">
-                <span class="pill-dot"></span>
-                Powered by Winston AI · English Research
+        <div class="hero-pill">
+            <span class="pill-dot"></span>
+            Powered by Winston AI · English Research
+        </div>
+
+        <h1 class="hero-h1">
+            Write with <span class="word-em">confidence.</span>
+            Submit with <span class="word-em"> integrity.</span>
+        </h1>
+
+        <p class="hero-sub">
+            PlagiaScope scans your research against <span class="hl">400 billion sources</span> to detect plagiarism, missing citations, and matching content — in seconds.
+        </p>
+
+        <div class="hero-ctas">
+            <a class="btn-main" href="chat">Start Checking Free <span class="arr">→</span></a>
+            <a class="btn-out" href="#how">See how it works</a>
+        </div>
+
+        <div class="stats-strip">
+            <div class="stat">
+                <div class="stat-n" data-target="400" data-suffix="B+">0</div>
+                <div class="stat-l">Sources scanned</div>
             </div>
-
-            <h1 class="hero-h1">
-                Write with <span class="word-em">confidence.</span>
-                <span class="word-fade">Submit with integrity.</span>
-            </h1>
-
-            <p class="hero-sub">
-                PlagiaScope scans your research against <span class="hl">400 billion sources</span> to detect plagiarism, missing citations, and matching content — in seconds.
-            </p>
-
-            <div class="hero-ctas">
-                <a class="btn-main" href="chat">Start Checking Free <span class="arr">→</span></a>
-                <a class="btn-out" href="#how">See how it works</a>
+            <div class="stat">
+                <div class="stat-n" data-target="47" data-suffix="">0</div>
+                <div class="stat-l">Languages</div>
             </div>
-
-            <div class="stats-strip">
-                <div class="stat">
-                    <div class="stat-n" data-target="400" data-suffix="B+">0</div>
-                    <div class="stat-l">Sources scanned</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-n" data-target="47" data-suffix="">0</div>
-                    <div class="stat-l">Languages</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-n" data-target="30" data-suffix="s">0</div>
-                    <div class="stat-l">Avg scan time</div>
-                </div>
+            <div class="stat">
+                <div class="stat-n" data-target="30" data-suffix="s">0</div>
+                <div class="stat-l">Avg scan time</div>
             </div>
+        </div>
         </div>
     </section>
 
-    <!-- ══ MARQUEE ══ -->
     <div class="marquee-wrap">
         <div class="marquee-track">
-            <!-- doubled for seamless loop -->
             <div class="marquee-item"><span>✦</span> Verbatim Detection</div>
             <div class="marquee-item"><span>✦</span> Paraphrase Analysis</div>
             <div class="marquee-item"><span>✦</span> Citation Integrity</div>
@@ -2024,7 +2023,6 @@
         </div>
     </div>
 
-    <!-- ══ DEMO WINDOW ══ -->
     <section class="demo-section">
         <div class="reveal">
             <div class="section-tag">✦ Live Preview</div>
@@ -2039,14 +2037,14 @@
                     <div class="b-dot"></div>
                     <div class="b-dot"></div>
                 </div>
-                <div class="b-url">localhost/plagiarism/chat.php</div>
+                <div class="b-url">https://plagiascope.softtechco.biz/</div>
             </div>
             <div class="browser-body">
                 <div class="b-left">
                     <div class="b-textarea">
                         <span id="typed"></span><span class="b-cursor"></span>
                     </div>
-                    <div class="b-btn">🔍 Analyze for Plagiarism</div>
+                    <div class="b-btn">Analyze for Plagiarism</div>
                 </div>
                 <div class="b-right">
                     <div class="b-score-box">
@@ -2077,7 +2075,6 @@
         </div>
     </section>
 
-    <!-- ══ HOW IT WORKS ══ -->
     <section class="how-section" id="how">
         <div class="reveal">
             <div class="section-tag">✦ Process</div>
@@ -2107,7 +2104,6 @@
         </div>
     </section>
 
-    <!-- ══ FEATURES ══ -->
     <section class="feat-section" id="features">
         <div class="reveal">
             <div class="section-tag">✦ Capabilities</div>
@@ -2143,7 +2139,6 @@
         </div>
     </section>
 
-    <!-- ══ CTA ══ -->
     <section class="cta-section">
         <div class="cta-block" id="ctaBlock">
             <div class="cta-mesh"></div>
@@ -2167,7 +2162,6 @@
     </footer>
 
     <script>
-        // ── Loader — dismiss after 3.5s (long enough to see the full animation) ──
         function dismissLoader() {
             document.getElementById('loader').classList.add('out');
         }
@@ -2178,7 +2172,6 @@
             window.addEventListener('load', () => setTimeout(dismissLoader, 3500));
         }
 
-        // ── Dark mode ──
         const htmlEl = document.documentElement;
         const dmBtn = document.getElementById('dmBtn');
         const saved = localStorage.getItem('ps-theme');
@@ -2193,7 +2186,6 @@
             localStorage.setItem('ps-theme', next);
         });
 
-        // ── Scroll ──
         const mainNav = document.getElementById('mainNav');
         const spb = document.getElementById('spb');
         const bttBtn = document.getElementById('btt');
@@ -2205,7 +2197,6 @@
             bttBtn.classList.toggle('show', sy > 400);
         });
 
-        // ── Intersection observer ──
         const obs = new IntersectionObserver(entries => entries.forEach(e => {
             if (e.isIntersecting) e.target.classList.add('vis');
         }), {
@@ -2214,7 +2205,6 @@
         });
         document.querySelectorAll('.reveal,.step,.feat,.browser,#ctaBlock').forEach(el => obs.observe(el));
 
-        // ── Mouse-track on steps ──
         document.querySelectorAll('.step').forEach(s => {
             s.addEventListener('mousemove', e => {
                 const r = s.getBoundingClientRect();
@@ -2223,7 +2213,6 @@
             });
         });
 
-        // ── Typewriter ──
         const txt = 'The greenhouse effect is a natural process\nby which certain gases in the atmosphere\ntrap heat from the sun. Scientists have\nextensively studied this phenomenon...';
         let ci = 0;
         const tel = document.getElementById('typed');
@@ -2237,7 +2226,6 @@
         }
         setTimeout(type, 2200);
 
-        // ── Counters ──
         function animN(el, target, suffix) {
             let cur = 0;
             const step = target / (1200 / 16);
