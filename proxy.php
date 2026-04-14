@@ -70,23 +70,51 @@ if (!is_writable($publicDir)) {
 
 $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $now = time();
+$isLoggedIn = !empty($_SESSION['is_logged_in']) && !empty($_SESSION['user_id']);
+$userId = $_SESSION['user_id'] ?? null;
 
-if (!isset($_SESSION['ps_rate'])) {
-    $_SESSION['ps_rate'] = [];
+// Rate limiting based on user type
+if ($isLoggedIn && $userId) {
+    // Logged-in users: 50 scans per day
+    require_once __DIR__ . '/app/database.php';
+    try {
+        $db = PlagiaDatabase::getInstance();
+        $todayScans = $db->countUserScansToday((int)$userId);
+
+        // Premium users get unlimited, regular users get 50/day
+        $limit = !empty($_SESSION['is_premium']) ? PHP_INT_MAX : 50;
+
+        if ($todayScans >= $limit) {
+            http_response_code(429);
+            echo json_encode([
+                'error' => 'Daily scan limit reached. You can scan up to 50 times per day. Upgrade to premium for unlimited scans.',
+                'limit_reached' => true,
+                'scans_today' => $todayScans
+            ]);
+            exit;
+        }
+    } catch (Exception $e) {
+        // Database error - fall back to session-based limiting
+        error_log('Database error in rate limiting: ' . $e->getMessage());
+    }
+} else {
+    // Guests: 1 scan per session (tracked by IP + session)
+    if (!isset($_SESSION['guest_scan_used'])) {
+        $_SESSION['guest_scan_used'] = false;
+    }
+
+    if ($_SESSION['guest_scan_used'] === true) {
+        http_response_code(429);
+        echo json_encode([
+            'error' => 'Guests are limited to 1 scan. Please sign in with Google to get unlimited scans and save your history.',
+            'require_login' => true,
+            'login_url' => '/auth/google.php'
+        ]);
+        exit;
+    }
+
+    $_SESSION['guest_scan_used'] = true;
 }
-
-$_SESSION['ps_rate'] = array_values(array_filter(
-    $_SESSION['ps_rate'],
-    static fn($ts) => ($now - (int)$ts) < 300
-));
-
-if (count($_SESSION['ps_rate']) >= 10) {
-    http_response_code(429);
-    echo json_encode(['error' => 'Too many scan requests. Please wait a few minutes and try again.']);
-    exit;
-}
-
-$_SESSION['ps_rate'][] = $now;
 
 
 function json_error(int $code, string $message): void
@@ -362,6 +390,30 @@ safe_unlink($storedPublicPath);
 
 if ($finalResponse === null) {
     json_error(429, 'All API keys exhausted. Please try again later.');
+}
+
+// Save scan to history
+if ($finalHttpCode >= 200 && $finalHttpCode < 300) {
+    try {
+        $db = PlagiaDatabase::getInstance();
+        $resultData = json_decode($finalResponse, true);
+
+        $scanData = [
+            'text' => $text,
+            'file_name' => $_FILES['file']['name'] ?? null,
+            'score' => $resultData['score'] ?? 0,
+            'sources' => count($resultData['sources'] ?? []),
+            'result' => $resultData
+        ];
+
+        $db->saveScan(
+            $isLoggedIn ? (int)$userId : null,
+            session_id(),
+            $scanData
+        );
+    } catch (Exception $e) {
+        error_log('Failed to save scan history: ' . $e->getMessage());
+    }
 }
 
 http_response_code($finalHttpCode > 0 ? $finalHttpCode : 500);

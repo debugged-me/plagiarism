@@ -1,3 +1,4 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 
@@ -217,6 +218,274 @@
       border-color: var(--acc-brd);
       background: var(--acc-soft);
       transform: translateX(-2px);
+    }
+
+    /* ─── AUTH & USER STYLES ─── */
+    .login-btn {
+      height: 36px;
+      padding: 0 16px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .2s;
+    }
+
+    .login-btn:hover {
+      background: var(--ink);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26, 61, 228, .25);
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .user-avatar:hover {
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .user-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 0;
+      min-width: 180px;
+      box-shadow: var(--sh2);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all .2s;
+      z-index: 100;
+    }
+
+    .user-menu:hover .user-dropdown,
+    .user-dropdown.show {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--ink);
+      text-decoration: none;
+      transition: background .15s;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .dropdown-item:hover {
+      background: var(--s2);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 0;
+    }
+
+    .user-name {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ─── HISTORY PANEL ─── */
+    .history-toggle {
+      height: 36px;
+      padding: 0 14px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .2s;
+    }
+
+    .history-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .history-panel {
+      position: fixed;
+      top: 60px;
+      right: -400px;
+      width: 360px;
+      bottom: 0;
+      background: var(--surface);
+      border-left: 1.5px solid var(--border);
+      box-shadow: -4px 0 24px rgba(0, 0, 0, .15);
+      transition: right .3s ease;
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-panel.open {
+      right: 0;
+    }
+
+    .history-header {
+      padding: 20px 24px;
+      border-bottom: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .history-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .history-close {
+      width: 32px;
+      height: 32px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      border-radius: 8px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      transition: all .2s;
+    }
+
+    .history-close:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .history-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--faint);
+      font-family: var(--font-body);
+      font-size: 14px;
+    }
+
+    .history-item {
+      background: var(--s2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .history-item:hover {
+      border-color: var(--accent);
+      transform: translateX(-4px);
+    }
+
+    .history-preview {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--ink2);
+      line-height: 1.5;
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .history-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--faint);
+    }
+
+    .history-score {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      background: var(--ok-bg);
+      border: 1px solid var(--ok-brd);
+      border-radius: 100px;
+      color: var(--ok);
+      font-weight: 600;
+    }
+
+    .history-score.high-risk {
+      background: var(--dbg);
+      border-color: var(--dbrd);
+      color: var(--danger);
+    }
+
+    .history-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .3);
+      opacity: 0;
+      visibility: hidden;
+      transition: all .3s;
+      z-index: 85;
+    }
+
+    .history-overlay.show {
+      opacity: 1;
+      visibility: visible;
     }
 
     .page {
@@ -1534,9 +1803,53 @@
     </a>
     <div class="top-r">
       <button class="dm-btn" id="dmBtn">🌙</button>
+
+      <?php if (!empty($_SESSION['is_logged_in'])): ?>
+        <!-- Logged in user -->
+        <button class="history-toggle" id="historyToggle" title="View scan history">
+          📜 History
+        </button>
+        <div class="user-menu" id="userMenu">
+          <span class="user-name"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></span>
+          <img src="<?php echo htmlspecialchars($_SESSION['user_avatar'] ?? 'https://www.gravatar.com/avatar/?d=mp'); ?>"
+            alt="Avatar" class="user-avatar" id="userAvatar">
+          <div class="user-dropdown">
+            <div class="dropdown-item">
+              <span>👤</span> <?php echo htmlspecialchars($_SESSION['user_email'] ?? ''); ?>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/user.php" class="dropdown-item">
+              <span>📊</span> My Account
+            </a>
+            <a href="/auth/logout.php" class="dropdown-item">
+              <span>🚪</span> Logout
+            </a>
+          </div>
+        </div>
+      <?php else: ?>
+        <!-- Guest user -->
+        <a href="/auth/google.php" class="login-btn">
+          <span>🔐</span> Sign in with Google
+        </a>
+      <?php endif; ?>
+
       <a class="back-link" href="/">← Home</a>
     </div>
   </nav>
+
+  <!-- History Panel (only for logged-in users) -->
+  <?php if (!empty($_SESSION['is_logged_in'])): ?>
+    <div class="history-overlay" id="historyOverlay"></div>
+    <div class="history-panel" id="historyPanel">
+      <div class="history-header">
+        <div class="history-title">📜 Scan History</div>
+        <button class="history-close" id="historyClose">✕</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">Loading your scan history...</div>
+      </div>
+    </div>
+  <?php endif; ?>
 
   <div class="page">
     <div class="pg-header">
@@ -2076,6 +2389,120 @@
         top: 0,
         behavior: 'smooth'
       });
+    }
+
+    /* ─── HISTORY PANEL ─── */
+    <?php if (!empty($_SESSION['is_logged_in'])): ?>
+        (function() {
+          const historyToggle = document.getElementById('historyToggle');
+          const historyPanel = document.getElementById('historyPanel');
+          const historyClose = document.getElementById('historyClose');
+          const historyOverlay = document.getElementById('historyOverlay');
+          const historyList = document.getElementById('historyList');
+          let historyLoaded = false;
+
+          function openHistory() {
+            historyPanel.classList.add('open');
+            historyOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            if (!historyLoaded) {
+              loadHistory();
+            }
+          }
+
+          function closeHistory() {
+            historyPanel.classList.remove('open');
+            historyOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+          }
+
+          historyToggle.addEventListener('click', openHistory);
+          historyClose.addEventListener('click', closeHistory);
+          historyOverlay.addEventListener('click', closeHistory);
+
+          // Close on escape key
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeHistory();
+          });
+
+          async function loadHistory() {
+            try {
+              const response = await fetch('/api/history.php');
+              const data = await response.json();
+
+              if (!data.success) {
+                historyList.innerHTML = `<div class="history-empty">${data.error || 'Failed to load history'}</div>`;
+                return;
+              }
+
+              if (data.scans.length === 0) {
+                historyList.innerHTML = `<div class="history-empty">No scans yet. Start checking your research!</div>`;
+                return;
+              }
+
+              historyList.innerHTML = data.scans.map(scan => {
+                const date = new Date(scan.created_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+                const score = Math.round(scan.plagiarism_score || 0);
+                const scoreClass = score > 50 ? 'high-risk' : '';
+                const preview = esc(scan.text_preview || 'No preview');
+
+                return `
+              <div class="history-item" data-id="${scan.id}">
+                <div class="history-preview">${preview}</div>
+                <div class="history-meta">
+                  <span>${date}</span>
+                  <span class="history-score ${scoreClass}">${score}% match</span>
+                </div>
+              </div>
+            `;
+              }).join('');
+
+              // Add click handlers to history items
+              document.querySelectorAll('.history-item').forEach(item => {
+                item.addEventListener('click', () => {
+                  // Could load full scan details here
+                  showToast('Click scan to view full details (coming soon)');
+                });
+              });
+
+              historyLoaded = true;
+            } catch (error) {
+              console.error('Failed to load history:', error);
+              historyList.innerHTML = `<div class="history-empty">Failed to load history. Please try again.</div>`;
+            }
+          }
+        })();
+    <?php endif; ?>
+
+    // Toast notification helper
+    function showToast(message) {
+      const existing = document.querySelector('.toast-msg');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.className = 'toast-msg';
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--ink);
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-family: var(--font-body);
+        font-size: 14px;
+        z-index: 1000;
+        animation: fadeUp .3s ease;
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
     }
   </script>
 </body>

@@ -1,5 +1,4 @@
 # Security - Never commit API keys
-app/secure_config.php
 config.local.js
 .env
 
