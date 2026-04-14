@@ -1,5 +1,4 @@
 RewriteEngine On
-RewriteBase /plagiarism/
 
 # landing page
 RewriteRule ^$ landing.php [L]
@@ -10,5 +9,5 @@ RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^([a-zA-Z0-9_-]+)$ $1.php [L]
 
 # optional: force remove .php from URL
-RewriteCond %{THE_REQUEST} \s/+plagiarism/([^.]+)\.php[\s?] [NC]
+RewriteCond %{THE_REQUEST} \s/+([^.]+)\.php[\s?] [NC]
 RewriteRule ^ %1 [R=301,L]

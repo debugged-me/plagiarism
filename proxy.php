@@ -20,15 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-/*
-|--------------------------------------------------------------------------
-| CONFIG
-|--------------------------------------------------------------------------
-| IMPORTANT:
-| 1) Put your REAL Winston API key here or load it from a secure config file.
-| 2) Because your Cloudflare secret was shared in chat, rotate it first,
-|    then paste the NEW secret here.
-*/
+
 
 const MAX_TEXT_LENGTH = 120000;
 const MIN_TEXT_LENGTH = 100;
@@ -37,23 +29,45 @@ const MAX_FILE_SIZE   = 10485760; // 10 MB
 $storageDir = __DIR__ . '/storage/plagiascope_tmp/';
 $publicDir  = __DIR__ . '/uploads/plagiascope_public/';
 
-if (!is_dir($storageDir) && !mkdir($storageDir, 0755, true) && !is_dir($storageDir)) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Failed to create storage directory']);
-    exit;
+// Create directories with more permissive permissions for cPanel
+if (!is_dir($storageDir)) {
+    if (!mkdir($storageDir, 0777, true) && !is_dir($storageDir)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to create storage directory. Please create it manually and set permissions to 755 or 777.']);
+        exit;
+    }
+    chmod($storageDir, 0777);
 }
 
-if (!is_dir($publicDir) && !mkdir($publicDir, 0755, true) && !is_dir($publicDir)) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Failed to create public upload directory']);
-    exit;
+if (!is_dir($publicDir)) {
+    if (!mkdir($publicDir, 0777, true) && !is_dir($publicDir)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to create public upload directory. Please create it manually and set permissions to 755 or 777.']);
+        exit;
+    }
+    chmod($publicDir, 0777);
 }
 
-/*
-|--------------------------------------------------------------------------
-| SIMPLE RATE LIMIT
-|--------------------------------------------------------------------------
-*/
+// Verify directories are writable
+if (!is_writable($storageDir)) {
+    chmod($storageDir, 0777);
+    if (!is_writable($storageDir)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Storage directory is not writable. Path: ' . $storageDir]);
+        exit;
+    }
+}
+
+if (!is_writable($publicDir)) {
+    chmod($publicDir, 0777);
+    if (!is_writable($publicDir)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Public upload directory is not writable. Path: ' . $publicDir]);
+        exit;
+    }
+}
+
+
 $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $now = time();
 
@@ -74,11 +88,7 @@ if (count($_SESSION['ps_rate']) >= 10) {
 
 $_SESSION['ps_rate'][] = $now;
 
-/*
-|--------------------------------------------------------------------------
-| HELPERS
-|--------------------------------------------------------------------------
-*/
+
 function json_error(int $code, string $message): void
 {
     http_response_code($code);
@@ -168,11 +178,7 @@ function build_public_file_url(string $publicFileName): string
     return $scheme . '://' . $host . $base . '/uploads/plagiascope_public/' . rawurlencode($publicFileName);
 }
 
-/*
-|--------------------------------------------------------------------------
-| REQUEST PARSE + TURNSTILE VERIFY
-|--------------------------------------------------------------------------
-*/
+
 $payloadData = get_request_payload();
 
 $text      = trim((string)$payloadData['text']);
@@ -182,11 +188,6 @@ $turnstile = trim((string)$payloadData['turnstile']);
 
 verify_turnstile($turnstile, TURNSTILE_SECRET_KEY, $ip);
 
-/*
-|--------------------------------------------------------------------------
-| BUILD WINSTON PAYLOAD
-|--------------------------------------------------------------------------
-*/
 $payload = [
     'language' => $language,
     'country'  => $country,
@@ -242,12 +243,16 @@ if ($payloadData['isMultipart'] && !empty($_FILES['file']['tmp_name'])) {
     $storedPublicPath  = $publicDir . $publicName;
 
     if (!move_uploaded_file($_FILES['file']['tmp_name'], $storedPrivatePath)) {
-        json_error(500, 'Failed to store uploaded file.');
+        $error = error_get_last();
+        $errorMsg = $error ? $error['message'] : 'Unknown error';
+        json_error(500, 'Failed to store uploaded file. Error: ' . $errorMsg . ' | Path: ' . $storedPrivatePath . ' | Writable: ' . (is_writable($storageDir) ? 'yes' : 'no'));
     }
 
     if (!copy($storedPrivatePath, $storedPublicPath)) {
         safe_unlink($storedPrivatePath);
-        json_error(500, 'Failed to prepare public scan file.');
+        $error = error_get_last();
+        $errorMsg = $error ? $error['message'] : 'Unknown error';
+        json_error(500, 'Failed to copy file for scanning. Error: ' . $errorMsg . ' | From: ' . $storedPrivatePath . ' | To: ' . $storedPublicPath);
     }
 
     $payload['file'] = build_public_file_url($publicName);
@@ -264,43 +269,100 @@ if ($payloadData['isMultipart'] && !empty($_FILES['file']['tmp_name'])) {
     $payload['text'] = $text;
 }
 
-/*
-|--------------------------------------------------------------------------
-| FORWARD TO WINSTON
-|--------------------------------------------------------------------------
-*/
 $postData = json_encode($payload);
 
-$ch = curl_init('https://api.gowinston.ai/v2/plagiarism');
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => $postData,
-    CURLOPT_HTTPHEADER     => [
-        'Authorization: Bearer ' . WINSTON_API_KEY,
-        'Content-Type: application/json',
-        'Content-Length: ' . strlen((string)$postData),
-    ],
-    CURLOPT_SSL_VERIFYPEER => true,
-    CURLOPT_TIMEOUT        => 120,
-]);
+function call_winston_api(string $postData, string $apiKey): ?array
+{
+    $ch = curl_init('https://api.gowinston.ai/v2/plagiarism');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $postData,
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen((string)$postData),
+        ],
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_TIMEOUT        => 120,
+    ]);
 
-$response = curl_exec($ch);
-$httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlErr  = curl_error($ch);
-curl_close($ch);
+    $response = curl_exec($ch);
+    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr  = curl_error($ch);
+    curl_close($ch);
 
-/*
-|--------------------------------------------------------------------------
-| CLEANUP
-|--------------------------------------------------------------------------
-*/
+    if ($curlErr) {
+        return ['error' => 'curl', 'message' => $curlErr];
+    }
+
+    $decoded = json_decode((string)$response, true);
+
+    $isQuotaError = $httpCode === 429 ||
+        (is_array($decoded) && isset($decoded['error']) &&
+            stripos($decoded['error'], 'quota') !== false);
+
+    if ($isQuotaError) {
+        return ['error' => 'quota', 'httpCode' => $httpCode, 'response' => $response];
+    }
+
+    return ['success' => true, 'httpCode' => $httpCode, 'response' => $response];
+}
+
+function get_working_api_key(array $keys): ?string
+{
+    $exhausted = $_SESSION['winston_exhausted'] ?? [];
+    $now = time();
+
+    $exhausted = array_filter($exhausted, fn($ts) => ($now - $ts) < 3600);
+    $_SESSION['winston_exhausted'] = $exhausted;
+
+    foreach ($keys as $key) {
+        $keyHash = substr(md5($key), 0, 8);
+        if (!isset($exhausted[$keyHash])) {
+            return $key;
+        }
+    }
+    return null;
+}
+
+function mark_key_exhausted(string $key): void
+{
+    $keyHash = substr(md5($key), 0, 8);
+    $_SESSION['winston_exhausted'][$keyHash] = time();
+}
+
+$apiKeys = is_array(WINSTON_API_KEY) ? WINSTON_API_KEY : [WINSTON_API_KEY];
+$finalResponse = null;
+$finalHttpCode = 500;
+
+foreach ($apiKeys as $apiKey) {
+    $result = call_winston_api($postData, $apiKey);
+
+    if (isset($result['success'])) {
+        $finalResponse = $result['response'];
+        $finalHttpCode = $result['httpCode'];
+        break;
+    }
+
+    if (isset($result['error']) && $result['error'] === 'quota') {
+        mark_key_exhausted($apiKey);
+        continue;
+    }
+
+    if (isset($result['error']) && $result['error'] === 'curl') {
+        $finalResponse = json_encode(['error' => 'Failed to reach Winston AI: ' . $result['message']]);
+        $finalHttpCode = 502;
+        break;
+    }
+}
+
 safe_unlink($storedPrivatePath);
 safe_unlink($storedPublicPath);
 
-if ($curlErr) {
-    json_error(502, 'Failed to reach Winston AI: ' . $curlErr);
+if ($finalResponse === null) {
+    json_error(429, 'All API keys exhausted. Please try again later.');
 }
 
-http_response_code($httpCode > 0 ? $httpCode : 500);
-echo $response ?: json_encode(['error' => 'Empty response from Winston AI']);
+http_response_code($finalHttpCode > 0 ? $finalHttpCode : 500);
+echo $finalResponse ?: json_encode(['error' => 'Empty response from Winston AI']);

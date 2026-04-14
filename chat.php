@@ -48,7 +48,6 @@
       --rs: 9px;
       --rx: 7px;
 
-      /* Font stacks */
       --font-display: 'Shippori Mincho B1', 'Shippori Mincho', serif;
       --font-body: 'Noto Sans JP', sans-serif;
       --font-mono: 'Zen Kaku Gothic New', monospace;
@@ -1529,13 +1528,13 @@
   <div id="spb"></div>
 
   <nav class="topbar">
-    <a class="brand" href="/plagiarism">
+    <a class="brand" href="/">
       <div class="brand-ico">🔍</div>
       <div class="brand-name">Plagia<em>Scope</em></div>
     </a>
     <div class="top-r">
       <button class="dm-btn" id="dmBtn">🌙</button>
-      <a class="back-link" href="/plagiarism">← Home</a>
+      <a class="back-link" href="/">← Home</a>
     </div>
   </nav>
 
