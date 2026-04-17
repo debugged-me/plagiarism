@@ -31,12 +31,12 @@ if (!isset($_GET['state']) || !isset($_SESSION['oauth_state']) || $_GET['state']
 unset($_SESSION['oauth_state']);
 
 $code = $_GET['code'];
+$redirectUri = resolve_google_redirect_uri();
 error_log('OAuth callback: code received, redirect_uri=' . $redirectUri);
 
 // Exchange code for tokens
 $tokenUrl = 'https://oauth2.googleapis.com/token';
 // Use the exact same redirect URI that was used in the initial request.
-$redirectUri = resolve_google_redirect_uri();
 
 $postData = [
     'code' => $code,

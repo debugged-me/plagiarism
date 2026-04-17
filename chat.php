@@ -2037,7 +2037,7 @@ start_app_session();
           </svg>
           <div class="g-center">
             <div class="g-num" id="gNum">0%</div>
-            <div class="g-lbl">Original</div>
+            <div class="g-lbl">Plagiarism</div>
           </div>
         </div>
         <div>
@@ -2347,26 +2347,25 @@ start_app_session();
       const sources = data.sources || [];
       const indexes = data.indexes || [];
       const plagScore = result.score ?? 0;
-      const origScore = Math.max(0, 100 - plagScore);
-      const strokeColor = origScore >= 80 ? '#157a3a' : origScore >= 60 ? '#c47a00' : '#d42020';
+      const strokeColor = plagScore <= 15 ? '#157a3a' : plagScore <= 30 ? '#c47a00' : '#d42020';
 
       const gFill = document.getElementById('gFill');
       gFill.style.stroke = strokeColor;
       setTimeout(() => {
-        gFill.style.strokeDashoffset = 310 - (origScore / 100) * 310;
+        gFill.style.strokeDashoffset = 310 - (plagScore / 100) * 310;
       }, 80);
 
       let cur = 0;
       const nEl = document.getElementById('gNum');
       nEl.style.color = strokeColor;
       const timer = setInterval(() => {
-        cur = Math.min(cur + 1.5, origScore);
+        cur = Math.min(cur + 1.5, plagScore);
         nEl.textContent = Math.round(cur) + '%';
-        if (cur >= origScore) clearInterval(timer);
+        if (cur >= plagScore) clearInterval(timer);
       }, 16);
 
-      const verdict = origScore >= 85 ? 'Highly Original' : origScore >= 70 ? 'Mostly Original' : origScore >= 50 ? 'Partially Plagiarized' : 'High Plagiarism Risk';
-      const desc = origScore >= 85 ? 'Your text appears largely original.' : origScore >= 70 ? 'Some matching content found. Review highlighted passages.' : origScore >= 50 ? 'Significant matches detected. Revise and cite sources.' : 'Large portion matches existing sources. Extensive revision required.';
+      const verdict = plagScore <= 15 ? 'Highly Original' : plagScore <= 30 ? 'Mostly Original' : plagScore <= 50 ? 'Partially Plagiarized' : 'High Plagiarism Risk';
+      const desc = plagScore <= 15 ? 'Your text appears largely original.' : plagScore <= 30 ? 'Some matching content found. Review highlighted passages.' : plagScore <= 50 ? 'Significant matches detected. Revise and cite sources.' : 'Large portion matches existing sources. Extensive revision required.';
 
       document.getElementById('verdict').textContent = verdict;
       document.getElementById('odesc').textContent = desc;

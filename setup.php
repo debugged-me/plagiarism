@@ -45,6 +45,7 @@ echo "\n=== Configuration ===\n";
 $configFile = __DIR__ . '/app/secure_config.php';
 if (file_exists($configFile)) {
     require_once $configFile;
+    require_once __DIR__ . '/app/url.php';
     
     if (defined('GOOGLE_CLIENT_ID') && !empty(GOOGLE_CLIENT_ID)) {
         echo "✓ GOOGLE_CLIENT_ID set\n";
@@ -63,6 +64,9 @@ if (file_exists($configFile)) {
     } else {
         echo "✗ WINSTON_API_KEY NOT set\n";
     }
+
+    echo "✓ Google redirect URI: " . resolve_google_redirect_uri() . "\n";
+    echo "  Register this exact URI in Google Cloud Console > OAuth 2.0 Client IDs > Authorized redirect URIs\n";
 } else {
     echo "✗ secure_config.php NOT FOUND\n";
 }

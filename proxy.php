@@ -504,6 +504,13 @@ function call_winston_api(string $postData, string $apiKey): ?array
     // Check for auth errors (403) or other non-2xx responses
     if ($httpCode < 200 || $httpCode >= 300) {
         $errorMsg = $decoded['error'] ?? $decoded['message'] ?? 'API returned error ' . $httpCode;
+        $description = $decoded['response']['description'] ?? $decoded['description'] ?? '';
+
+        // Show specific error for insufficient credits
+        if (isset($decoded['response']['error']) && $decoded['response']['error'] === 'INSUFFICIENT_CREDIT') {
+            $errorMsg = 'Insufficient API credits. ' . ($description ?: 'Please add credits at https://dev.gowinston.ai/billing');
+        }
+
         return ['error' => 'api', 'httpCode' => $httpCode, 'response' => json_encode(['error' => $errorMsg])];
     }
 

@@ -288,13 +288,20 @@ $isPremium = !empty($_SESSION['is_premium']);
             height: 96px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, .85);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
-            transition: transform .2s;
+            border: 3px solid rgba(255, 255, 255, .9);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+            transition: all .2s ease;
+            background: var(--surface);
         }
 
         .avatar:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .3);
+            border-color: #fff;
+        }
+
+        .avatar-error {
+            display: none;
         }
 
         .avatar-placeholder {
@@ -966,7 +973,10 @@ $isPremium = !empty($_SESSION['is_premium']);
             <div class="profile-card">
                 <div class="profile-header">
                     <?php if (!empty($avatar)): ?>
-                        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="Avatar" class="avatar">
+                        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="Avatar" class="avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="avatar-placeholder" style="display: none;">
+                            <?php echo strtoupper(substr($_SESSION['user_name'] ?? 'U', 0, 1)); ?>
+                        </div>
                     <?php else: ?>
                         <div class="avatar-placeholder">
                             <?php echo strtoupper(substr($_SESSION['user_name'] ?? 'U', 0, 1)); ?>
