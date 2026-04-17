@@ -126,6 +126,153 @@ function json_error(int $code, string $message): void
     exit;
 }
 
+function extract_text_from_file(string $filePath, string $ext): ?string
+{
+    $ext = strtolower($ext);
+
+    if ($ext === 'pdf') {
+        return extract_text_from_pdf($filePath);
+    } elseif ($ext === 'docx') {
+        return extract_text_from_docx($filePath);
+    } elseif ($ext === 'doc') {
+        return extract_text_from_doc($filePath);
+    }
+
+    return null;
+}
+
+function extract_text_from_pdf(string $filePath): ?string
+{
+    // Try to use pdftotext if available
+    $pdftotext = shell_exec('which pdftotext 2>/dev/null');
+    if ($pdftotext) {
+        $output = shell_exec('pdftotext "' . escapeshellarg($filePath) . '" - 2>/dev/null');
+        if ($output && strlen($output) > 50) {
+            return clean_extracted_text($output);
+        }
+    }
+
+    // Fallback: extract text from PDF using basic parsing
+    $content = file_get_contents($filePath);
+    if (!$content) return null;
+
+    // Look for text streams in PDF
+    preg_match_all('/stream\s*(.*?)\s*endstream/s', $content, $matches);
+    $text = '';
+    foreach ($matches[1] as $stream) {
+        // Try to decode flate-compressed streams
+        $decoded = @gzuncompress($stream);
+        if ($decoded) {
+            // Extract text from decoded content
+            preg_match_all('/\[\s*\(([^)]+)\)\s*\]/', $decoded, $textMatches);
+            foreach ($textMatches[1] as $t) {
+                $text .= $t . ' ';
+            }
+        }
+    }
+
+    // Alternative: look for BT...ET blocks (Begin/End Text)
+    preg_match_all('/BT\s*(.*?)\s*ET/s', $content, $btMatches);
+    foreach ($btMatches[1] as $bt) {
+        preg_match_all('/\(([^)]+)\)/', $bt, $parenMatches);
+        foreach ($parenMatches[1] as $t) {
+            $text .= $t . ' ';
+        }
+    }
+
+    if (strlen($text) > 50) {
+        return clean_extracted_text($text);
+    }
+
+    return null;
+}
+
+function extract_text_from_docx(string $filePath): ?string
+{
+    // DOCX is a ZIP file containing XML
+    $zip = new ZipArchive();
+    if ($zip->open($filePath) !== true) {
+        return null;
+    }
+
+    // Read the main document content
+    $xmlContent = $zip->getFromName('word/document.xml');
+    $zip->close();
+
+    if (!$xmlContent) {
+        return null;
+    }
+
+    // Extract text from XML
+    $xml = new SimpleXMLElement($xmlContent);
+    $xml->registerXPathNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+    $text = '';
+    $paragraphs = $xml->xpath('//w:p');
+    foreach ($paragraphs as $p) {
+        $runs = $p->xpath('.//w:t');
+        foreach ($runs as $t) {
+            $text .= (string)$t . ' ';
+        }
+        $text .= "\n";
+    }
+
+    if (strlen($text) > 50) {
+        return clean_extracted_text($text);
+    }
+
+    return null;
+}
+
+function extract_text_from_doc(string $filePath): ?string
+{
+    // Try to use antiword or catdoc if available
+    $antiword = shell_exec('which antiword 2>/dev/null');
+    if ($antiword) {
+        $output = shell_exec('antiword "' . escapeshellarg($filePath) . '" 2>/dev/null');
+        if ($output && strlen($output) > 50) {
+            return clean_extracted_text($output);
+        }
+    }
+
+    $catdoc = shell_exec('which catdoc 2>/dev/null');
+    if ($catdoc) {
+        $output = shell_exec('catdoc "' . escapeshellarg($filePath) . '" 2>/dev/null');
+        if ($output && strlen($output) > 50) {
+            return clean_extracted_text($output);
+        }
+    }
+
+    // Fallback: try to extract raw text from the binary
+    $content = file_get_contents($filePath);
+    if (!$content) return null;
+
+    // Look for readable text in the binary
+    preg_match_all('/[\x20-\x7E\x0A\x0D]{10,}/', $content, $matches);
+    $text = implode(' ', $matches[0]);
+
+    if (strlen($text) > 100) {
+        return clean_extracted_text($text);
+    }
+
+    return null;
+}
+
+function clean_extracted_text(string $text): string
+{
+    // Clean up extracted text
+    $text = preg_replace('/\s+/', ' ', $text); // Normalize whitespace
+    $text = preg_replace('/[^\x20-\x7E\x0A\x0D\xA0-\xFF]/', '', $text); // Remove non-printable
+    $text = trim($text);
+
+    // Ensure valid UTF-8 encoding
+    if (!mb_check_encoding($text, 'UTF-8')) {
+        $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+    }
+
+    return $text;
+}
+
 function get_request_payload(): array
 {
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
@@ -224,7 +371,6 @@ $payload = [
 ];
 
 $storedPrivatePath = null;
-$storedPublicPath  = null;
 
 if ($payloadData['isMultipart'] && !empty($_FILES['file']['tmp_name'])) {
     if (!isset($_FILES['file']['error']) || is_array($_FILES['file']['error'])) {
@@ -278,14 +424,24 @@ if ($payloadData['isMultipart'] && !empty($_FILES['file']['tmp_name'])) {
         json_error(500, 'Failed to store uploaded file. Error: ' . $errorMsg . ' | Path: ' . $storedPrivatePath . ' | Writable: ' . (is_writable($storageDir) ? 'yes' : 'no'));
     }
 
-    if (!copy($storedPrivatePath, $storedPublicPath)) {
+    // Extract text from the uploaded file instead of sending URL
+    // (Winston API cannot access localhost URLs)
+    $extractedText = extract_text_from_file($storedPrivatePath, $ext);
+
+    if ($extractedText === null || strlen($extractedText) < MIN_TEXT_LENGTH) {
         safe_unlink($storedPrivatePath);
-        $error = error_get_last();
-        $errorMsg = $error ? $error['message'] : 'Unknown error';
-        json_error(500, 'Failed to copy file for scanning. Error: ' . $errorMsg . ' | From: ' . $storedPrivatePath . ' | To: ' . $storedPublicPath);
+        json_error(400, 'Could not extract readable text from the uploaded file. Please try uploading a different file or paste the text directly.');
     }
 
-    $payload['file'] = build_public_file_url($publicName);
+    if (strlen($extractedText) > MAX_TEXT_LENGTH) {
+        $extractedText = substr($extractedText, 0, MAX_TEXT_LENGTH);
+    }
+
+    $payload['text'] = $extractedText;
+    $payload['file_name'] = $origName;
+
+    // Clean up the temporary file
+    safe_unlink($storedPrivatePath);
 } else {
     if ($text === '') {
         json_error(400, 'Please provide text or upload a file.');
@@ -299,7 +455,16 @@ if ($payloadData['isMultipart'] && !empty($_FILES['file']['tmp_name'])) {
     $payload['text'] = $text;
 }
 
+// Ensure text is valid UTF-8 before JSON encoding
+if (isset($payload['text']) && !mb_check_encoding($payload['text'], 'UTF-8')) {
+    $payload['text'] = mb_convert_encoding($payload['text'], 'UTF-8', 'UTF-8');
+}
+
 $postData = json_encode($payload);
+
+if ($postData === false) {
+    json_error(500, 'Failed to encode request data. Please try with different text or file.');
+}
 
 function call_winston_api(string $postData, string $apiKey): ?array
 {
@@ -334,6 +499,12 @@ function call_winston_api(string $postData, string $apiKey): ?array
 
     if ($isQuotaError) {
         return ['error' => 'quota', 'httpCode' => $httpCode, 'response' => $response];
+    }
+
+    // Check for auth errors (403) or other non-2xx responses
+    if ($httpCode < 200 || $httpCode >= 300) {
+        $errorMsg = $decoded['error'] ?? $decoded['message'] ?? 'API returned error ' . $httpCode;
+        return ['error' => 'api', 'httpCode' => $httpCode, 'response' => json_encode(['error' => $errorMsg])];
     }
 
     return ['success' => true, 'httpCode' => $httpCode, 'response' => $response];
@@ -385,10 +556,16 @@ foreach ($apiKeys as $apiKey) {
         $finalHttpCode = 502;
         break;
     }
+
+    if (isset($result['error']) && $result['error'] === 'api') {
+        $finalResponse = $result['response'];
+        $finalHttpCode = $result['httpCode'];
+        break;
+    }
 }
 
-safe_unlink($storedPrivatePath);
-safe_unlink($storedPublicPath);
+// Note: File is already cleaned up after text extraction
+// Only text content is sent to Winston API, not file URLs
 
 if ($finalResponse === null) {
     json_error(429, 'All API keys exhausted. Please try again later.');
@@ -402,8 +579,8 @@ if ($finalHttpCode >= 200 && $finalHttpCode < 300) {
         $resultSummary = is_array($resultData['result'] ?? null) ? $resultData['result'] : $resultData;
 
         $scanData = [
-            'text' => $text,
-            'file_name' => $_FILES['file']['name'] ?? null,
+            'text' => $payload['text'] ?? '',
+            'file_name' => $payload['file_name'] ?? null,
             'score' => $resultSummary['score'] ?? 0,
             'sources' => count($resultData['sources'] ?? []),
             'result' => $resultData

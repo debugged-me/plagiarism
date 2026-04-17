@@ -3,7 +3,6 @@ require_once __DIR__ . '/app/secure_config.php';
 require_once __DIR__ . '/app/session.php';
 start_app_session();
 
-// Check if user is logged in
 if (empty($_SESSION['is_logged_in']) || empty($_SESSION['user_id'])) {
     header('Location: ' . app_path('auth/google'));
     exit;
@@ -24,9 +23,8 @@ $scans = $db->getUserScans((int)$_SESSION['user_id'], 20);
 $todayScans = $db->countUserScansToday((int)$_SESSION['user_id']);
 $limit = !empty($_SESSION['is_premium']) ? 'Unlimited' : '10/day';
 $remaining = !empty($_SESSION['is_premium']) ? '∞' : max(0, 10 - $todayScans);
-
-// Get avatar from session or database
 $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
+$isPremium = !empty($_SESSION['is_premium']);
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -35,7 +33,7 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Account | PlagiaScope</title>
-    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Shippori+Mincho:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;700;800&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <style>
         *,
@@ -55,11 +53,12 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             --ink: #0e0c09;
             --ink2: #2a2620;
             --muted: #6b6560;
-            --faint: #a09890;
+            --hint: #a09890;
             --accent: #1a3de4;
             --acc2: #4466f5;
             --acc-soft: #eaedff;
             --acc-brd: #b8c4fd;
+            --acc-text: #1a3de4;
             --danger: #d42020;
             --dbg: #fef2f2;
             --dbrd: #fecaca;
@@ -75,7 +74,7 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             --r: 14px;
             --rs: 9px;
             --rx: 7px;
-            --font-display: 'Shippori Mincho B1', 'Shippori Mincho', serif;
+            --font-display: 'Shippori Mincho B1', serif;
             --font-body: 'Noto Sans JP', sans-serif;
             --font-mono: 'Zen Kaku Gothic New', monospace;
         }
@@ -89,11 +88,12 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             --ink: #eceef8;
             --ink2: #bfc6dc;
             --muted: #6e7d9a;
-            --faint: #3a4560;
+            --hint: #3a4560;
             --accent: #5577ff;
             --acc2: #7a99ff;
             --acc-soft: #0e1530;
             --acc-brd: #1e3060;
+            --acc-text: #7a99ff;
             --nav-bg: rgba(8, 10, 15, .94);
             --sh: 0 1px 6px rgba(0, 0, 0, .35);
             --sh2: 0 4px 18px rgba(0, 0, 0, .45);
@@ -112,6 +112,7 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             transition: background .4s, color .4s;
         }
 
+        /* ── Topbar ── */
         .topbar {
             background: var(--nav-bg);
             border-bottom: 1px solid var(--border);
@@ -156,6 +157,8 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             display: grid;
             place-items: center;
             font-size: 15px;
+            color: #fff;
+            font-weight: 700;
             transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), background .2s;
         }
 
@@ -213,9 +216,6 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             border-radius: var(--rx);
             border: 1.5px solid transparent;
             transition: all .2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
 
         .nav-link:hover {
@@ -224,8 +224,9 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             background: var(--acc-soft);
         }
 
+        /* ── Page layout ── */
         .main {
-            max-width: 960px;
+            max-width: 980px;
             margin: 0 auto;
             padding: 40px 24px;
             animation: fadeIn .6s ease both;
@@ -243,17 +244,29 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             }
         }
 
+        /* Two-column profile shell */
+        .profile-shell {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 700px) {
+            .profile-shell {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Left: Profile card ── */
         .profile-card {
             background: var(--surface);
             border: 1.5px solid var(--border);
             border-radius: var(--r);
-            padding: 36px;
             box-shadow: var(--sh);
-            display: flex;
-            align-items: center;
-            gap: 28px;
-            margin-bottom: 24px;
-            transition: all .3s ease;
+            overflow: hidden;
+            transition: box-shadow .3s, border-color .3s;
         }
 
         .profile-card:hover {
@@ -261,143 +274,134 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             border-color: var(--border2);
         }
 
-        .avatar-wrap {
-            position: relative;
+        .profile-header {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--acc2) 100%);
+            padding: 36px 24px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
         }
 
         .avatar {
-            width: 80px;
-            height: 80px;
+            width: 96px;
+            height: 96px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid var(--border);
-            transition: all .2s;
+            border: 3px solid rgba(255, 255, 255, .85);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+            transition: transform .2s;
         }
 
         .avatar:hover {
-            border-color: var(--accent);
             transform: scale(1.05);
         }
 
         .avatar-placeholder {
-            width: 80px;
-            height: 80px;
+            width: 96px;
+            height: 96px;
             border-radius: 50%;
-            background: var(--accent);
+            background: rgba(255, 255, 255, .2);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            font-weight: 600;
-            font-family: var(--font-display);
-            border: 3px solid var(--border);
-        }
-
-        .profile-info h1 {
-            font-family: var(--font-display);
-            font-size: 26px;
+            font-size: 40px;
             font-weight: 700;
-            margin-bottom: 6px;
-            color: var(--ink);
+            font-family: var(--font-display);
+            border: 3px solid rgba(255, 255, 255, .85);
         }
 
-        .profile-info .email {
+        .profile-name {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -.01em;
+            text-align: center;
+        }
+
+        .profile-email {
             font-family: var(--font-mono);
-            font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 12px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, .75);
+            text-align: center;
         }
 
-        .badge {
+        .plan-badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            background: var(--acc-soft);
-            color: var(--accent);
-            border: 1px solid var(--acc-brd);
+            gap: 5px;
+            padding: 5px 14px;
             border-radius: 20px;
             font-family: var(--font-mono);
             font-size: 12px;
             font-weight: 600;
-            letter-spacing: .02em;
-        }
-
-        .badge.premium {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            background: rgba(255, 255, 255, .2);
             color: #fff;
+            border: 1px solid rgba(255, 255, 255, .35);
+        }
+
+        .plan-badge.premium {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
             border-color: transparent;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, .4);
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 24px;
+        .profile-body {
+            padding: 20px 24px 24px;
         }
 
-        @media (max-width: 640px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .stat-card {
-            background: var(--surface);
-            border: 1.5px solid var(--border);
-            border-radius: var(--r);
-            padding: 28px 20px;
-            box-shadow: var(--sh);
-            text-align: center;
-            transition: all .2s;
-        }
-
-        .stat-card:hover {
-            border-color: var(--border2);
-            transform: translateY(-2px);
-            box-shadow: var(--sh2);
-        }
-
-        .stat-value {
-            font-family: var(--font-display);
-            font-size: 40px;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            font-family: var(--font-mono);
-            font-size: 12px;
-            color: var(--muted);
-            letter-spacing: .02em;
-        }
-
-        .actions {
+        .meta-list {
             display: flex;
-            gap: 16px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 0;
+            margin-bottom: 20px;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .meta-row:last-child {
+            border-bottom: none;
+        }
+
+        .meta-row .label {
+            color: var(--muted);
+        }
+
+        .meta-row .value {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .btn-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .btn {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            padding: 14px 28px;
+            gap: 7px;
+            padding: 11px 16px;
             border-radius: var(--rx);
             font-family: var(--font-mono);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             text-decoration: none;
-            transition: all .2s;
             cursor: pointer;
             border: 1.5px solid transparent;
-            flex: 1;
-            min-width: 160px;
-            max-width: 240px;
+            transition: all .2s;
         }
 
         .btn-primary {
@@ -407,7 +411,7 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
 
         .btn-primary:hover {
             background: var(--ink);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(26, 61, 228, .25);
         }
 
@@ -425,15 +429,139 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
         .btn-premium {
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             color: #fff;
-            border-color: transparent;
-            box-shadow: 0 4px 14px rgba(245, 158, 11, .3);
+            box-shadow: 0 3px 10px rgba(245, 158, 11, .3);
         }
 
         .btn-premium:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 158, 11, .4);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(245, 158, 11, .4);
         }
 
+        /* ── Right: Stats + info ── */
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r);
+            padding: 24px 16px;
+            text-align: center;
+            box-shadow: var(--sh);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--sh2);
+            border-color: var(--border2);
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 38px;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: .04em;
+            margin-top: 6px;
+            display: block;
+        }
+
+        /* Usage progress bar (free users only) */
+        .usage-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px 24px;
+            box-shadow: var(--sh);
+        }
+
+        .usage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .usage-header span {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .usage-header strong {
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .progress-bg {
+            height: 8px;
+            border-radius: 4px;
+            background: var(--s2);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--acc2));
+            transition: width .6s ease;
+        }
+
+        /* Info tiles */
+        .info-tiles {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-tile {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--rs);
+            padding: 14px 16px;
+            box-shadow: var(--sh);
+        }
+
+        .info-tile .tile-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--hint);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .info-tile .tile-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        /* ── History section ── */
         .history-section {
             background: var(--surface);
             border: 1.5px solid var(--border);
@@ -443,7 +571,7 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
         }
 
         .history-header {
-            padding: 20px 24px;
+            padding: 18px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -452,9 +580,8 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
 
         .history-header h2 {
             font-family: var(--font-display);
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 600;
-            color: var(--ink);
         }
 
         .history-header span {
@@ -463,52 +590,49 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             color: var(--muted);
         }
 
-        .history-list {
-            padding: 8px;
-        }
-
         .history-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px;
-            border-radius: var(--rx);
-            transition: all .2s;
-            margin-bottom: 4px;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background .15s;
+            gap: 12px;
         }
 
         .history-item:last-child {
-            margin-bottom: 0;
+            border-bottom: none;
         }
 
         .history-item:hover {
-            background: var(--bg);
+            background: var(--s2);
         }
 
-        .history-preview {
+        .h-preview {
             flex: 1;
             min-width: 0;
         }
 
-        .history-preview p {
+        .h-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ink);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            color: var(--ink);
-            font-size: 14px;
-            font-weight: 500;
+            margin-bottom: 5px;
         }
 
-        .history-meta {
+        .h-meta {
             display: flex;
             align-items: center;
-            gap: 16px;
-            margin-top: 4px;
+            gap: 10px;
         }
 
-        .score-badge {
-            padding: 4px 10px;
-            border-radius: 6px;
+        .score-pill {
+            padding: 3px 9px;
+            border-radius: 5px;
             font-family: var(--font-mono);
             font-size: 11px;
             font-weight: 600;
@@ -532,24 +656,30 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             border: 1px solid var(--dbrd);
         }
 
-        .history-date {
+        .h-date {
             font-family: var(--font-mono);
-            font-size: 12px;
-            color: var(--muted);
+            font-size: 11px;
+            color: var(--hint);
+        }
+
+        .h-chevron {
+            color: var(--hint);
+            font-size: 18px;
+            flex-shrink: 0;
         }
 
         .empty-state {
             text-align: center;
-            padding: 60px 48px;
+            padding: 56px 32px;
             color: var(--muted);
         }
 
         .empty-state svg {
-            width: 56px;
-            height: 56px;
-            margin-bottom: 20px;
-            opacity: .5;
-            stroke: var(--faint);
+            width: 48px;
+            height: 48px;
+            opacity: .4;
+            margin-bottom: 16px;
+            stroke: var(--hint);
         }
 
         .empty-state p {
@@ -557,33 +687,11 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             font-size: 14px;
         }
 
-        /* Clickable history items */
-        .history-item {
-            position: relative;
-        }
-
-        .history-item:hover {
-            background: var(--s2);
-            border-color: var(--border2);
-        }
-
-        .view-details {
-            font-family: var(--font-mono);
-            font-size: 11px;
-            color: var(--accent);
-            opacity: 0;
-            transition: opacity .2s;
-        }
-
-        .history-item:hover .view-details {
-            opacity: 1;
-        }
-
-        /* Modal Styles */
+        /* ── Modal ── */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(14, 12, 9, .7);
+            background: rgba(14, 12, 9, .65);
             backdrop-filter: blur(8px);
             z-index: 1000;
             opacity: 0;
@@ -606,12 +714,12 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             border-radius: var(--r);
             box-shadow: var(--sh2), 0 25px 50px -12px rgba(14, 12, 9, .25);
             width: 100%;
-            max-width: 900px;
-            max-height: 90vh;
+            max-width: 860px;
+            max-height: 88vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            transform: translateY(20px);
+            transform: translateY(16px);
             transition: transform .3s ease;
         }
 
@@ -620,7 +728,7 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
         }
 
         .modal-header {
-            padding: 20px 32px;
+            padding: 18px 28px;
             border-bottom: 1.5px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -630,15 +738,14 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
 
         .modal-header h3 {
             font-family: var(--font-display);
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 600;
-            color: var(--ink);
         }
 
         .modal-close {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
             border: 1.5px solid var(--border);
             background: var(--surface);
             color: var(--muted);
@@ -656,66 +763,51 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
         }
 
         .modal-body {
-            padding: 32px;
+            padding: 28px;
             overflow-y: auto;
         }
 
-        .scan-summary {
+        /* Score block inside modal */
+        .scan-score-block {
             display: flex;
-            gap: 40px;
-            align-items: flex-start;
-            margin-bottom: 32px;
-            padding-bottom: 32px;
-            border-bottom: 1.5px solid var(--border);
-        }
-
-        @media (max-width: 640px) {
-            .scan-summary {
-                flex-direction: column;
-                gap: 20px;
-            }
-        }
-
-        .scan-score {
-            text-align: center;
-            padding: 28px 40px;
+            align-items: center;
+            gap: 24px;
+            padding: 24px 28px;
             border-radius: var(--r);
-            min-width: 160px;
-            flex-shrink: 0;
+            margin-bottom: 28px;
         }
 
-        .scan-score.low {
+        .scan-score-block.low {
             background: var(--okbg);
-            border: 2px solid var(--okbrd);
+            border: 1.5px solid var(--okbrd);
         }
 
-        .scan-score.med {
+        .scan-score-block.med {
             background: var(--wbg);
-            border: 2px solid var(--wbrd);
+            border: 1.5px solid var(--wbrd);
         }
 
-        .scan-score.high {
+        .scan-score-block.high {
             background: var(--dbg);
-            border: 2px solid var(--dbrd);
+            border: 1.5px solid var(--dbrd);
         }
 
-        .score-num {
+        .big-score {
             font-family: var(--font-display);
-            font-size: 52px;
+            font-size: 54px;
             font-weight: 700;
-            display: block;
             line-height: 1;
         }
 
-        .scan-score.low .score-num {
+        .scan-score-block.low .big-score {
             color: var(--ok);
         }
 
-        .scan-score.med .score-num {
+        .scan-score-block.med .big-score {
             color: var(--warn);
         }
 
-        .scan-score.high .score-num {
+        .scan-score-block.high .big-score {
             color: var(--danger);
         }
 
@@ -723,96 +815,88 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             font-family: var(--font-mono);
             font-size: 12px;
             color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: .1em;
-            margin-top: 8px;
-            display: block;
+            margin-top: 4px;
         }
 
-        .scan-meta {
-            flex: 1;
+        .scan-meta-grid {
             display: grid;
-            gap: 12px;
+            gap: 10px;
+            margin-bottom: 28px;
         }
 
-        .scan-meta p {
-            font-family: var(--font-body);
-            font-size: 15px;
-            color: var(--ink);
-            margin: 0;
-            line-height: 1.5;
+        .scan-meta-row {
+            display: flex;
+            font-size: 14px;
+            gap: 8px;
         }
 
-        .scan-meta strong {
+        .scan-meta-row strong {
             color: var(--muted);
             font-weight: 500;
-            display: inline-block;
-            min-width: 100px;
+            min-width: 120px;
         }
 
         .text-section {
-            margin-bottom: 32px;
+            margin-bottom: 28px;
         }
 
         .text-section h4 {
             font-family: var(--font-display);
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--ink);
+            margin-bottom: 12px;
         }
 
         .text-content {
             background: var(--s2);
             border: 1.5px solid var(--border);
             border-radius: var(--rx);
-            padding: 20px;
-            font-family: var(--font-body);
-            font-size: 14px;
+            padding: 16px;
+            font-size: 13px;
             line-height: 1.7;
             color: var(--ink2);
-            max-height: 300px;
+            max-height: 260px;
             overflow-y: auto;
             white-space: pre-wrap;
             word-break: break-word;
+            font-family: var(--font-body);
         }
 
         .sources-section h4 {
             font-family: var(--font-display);
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            margin-bottom: 20px;
-            color: var(--ink);
+            margin-bottom: 16px;
         }
 
         .source-item {
             display: flex;
-            gap: 20px;
-            padding: 20px;
+            gap: 16px;
+            padding: 16px;
             border: 1.5px solid var(--border);
             border-radius: var(--rx);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             background: var(--surface);
-            transition: all .2s;
+            transition: border-color .2s, box-shadow .2s, transform .2s;
         }
 
         .source-item:hover {
             border-color: var(--border2);
             box-shadow: var(--sh);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         .source-rank {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            background: var(--s2);
+            width: 40px;
+            height: 40px;
+            border-radius: 9px;
+            background: var(--acc-soft);
             display: grid;
             place-items: center;
             font-family: var(--font-mono);
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
-            color: var(--accent);
+            color: var(--acc-text);
             flex-shrink: 0;
         }
 
@@ -822,17 +906,16 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
         }
 
         .source-title {
-            font-family: var(--font-body);
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--ink);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             line-height: 1.4;
         }
 
         .source-url {
             font-family: var(--font-mono);
-            font-size: 13px;
+            font-size: 12px;
             color: var(--accent);
             text-decoration: none;
             word-break: break-all;
@@ -844,14 +927,16 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
 
         .source-match {
             font-family: var(--font-mono);
-            font-size: 12px;
+            font-size: 11px;
             color: var(--muted);
-            margin-top: 10px;
+            margin-top: 6px;
         }
     </style>
 </head>
 
 <body>
+
+    <!-- Topbar -->
     <div class="topbar">
         <a href="<?php echo htmlspecialchars(app_path('/')); ?>" class="brand">
             <div class="brand-ico">P</div>
@@ -859,12 +944,12 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
         </a>
         <div class="top-r">
             <a href="<?php echo htmlspecialchars(app_path('chat')); ?>" class="nav-link">New Scan</a>
-            <button class="dm-btn" id="dmToggle" title="Toggle theme" style="display: grid; place-items: center;">
+            <button class="dm-btn" id="dmToggle" title="Toggle theme">
                 <svg id="sunIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="5" />
                     <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
                 </svg>
-                <svg id="moonIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                <svg id="moonIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
                     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
                 </svg>
             </button>
@@ -873,57 +958,123 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
     </div>
 
     <main class="main">
-        <div class="profile-card">
-            <div class="avatar-wrap">
-                <?php if (!empty($avatar)): ?>
-                    <img src="<?php echo htmlspecialchars($avatar); ?>" alt="Avatar" class="avatar">
-                <?php else: ?>
-                    <div class="avatar-placeholder">
-                        <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
+
+        <!-- Profile shell: left sidebar + right content -->
+        <div class="profile-shell">
+
+            <!-- Left: Profile card -->
+            <div class="profile-card">
+                <div class="profile-header">
+                    <?php if (!empty($avatar)): ?>
+                        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="Avatar" class="avatar">
+                    <?php else: ?>
+                        <div class="avatar-placeholder">
+                            <?php echo strtoupper(substr($_SESSION['user_name'] ?? 'U', 0, 1)); ?>
+                        </div>
+                    <?php endif; ?>
+                    <div class="profile-name"><?php echo htmlspecialchars($_SESSION['user_name'] ?? ''); ?></div>
+                    <div class="profile-email"><?php echo htmlspecialchars($_SESSION['user_email'] ?? ''); ?></div>
+                    <span class="plan-badge <?php echo $isPremium ? 'premium' : ''; ?>">
+                        <?php echo $isPremium ? '★ Premium' : 'Free Plan'; ?>
+                    </span>
+                </div>
+                <div class="profile-body">
+                    <div class="meta-list">
+                        <div class="meta-row">
+                            <span class="label">Daily limit</span>
+                            <span class="value"><?php echo htmlspecialchars($limit); ?></span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="label">Scans today</span>
+                            <span class="value"><?php echo $todayScans; ?></span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="label">Remaining</span>
+                            <span class="value"><?php echo $remaining; ?></span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="label">Total scans</span>
+                            <span class="value"><?php echo count($scans); ?></span>
+                        </div>
+                    </div>
+                    <div class="btn-stack">
+                        <a href="<?php echo htmlspecialchars(app_path('chat')); ?>" class="btn btn-primary">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            New Scan
+                        </a>
+                        <?php if (!$isPremium): ?>
+                            <a href="<?php echo htmlspecialchars(app_path('premium')); ?>" class="btn btn-premium">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.86L12 17.77l-6.18 3.23L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                </svg>
+                                Upgrade to Premium
+                            </a>
+                        <?php endif; ?>
+                        <a href="<?php echo htmlspecialchars(app_path('auth/logout')); ?>" class="btn btn-secondary">
+                            Sign Out
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right column -->
+            <div class="right-col">
+
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-value"><?php echo count($scans); ?></span>
+                        <span class="stat-label">Total Scans</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value"><?php echo $todayScans; ?></span>
+                        <span class="stat-label">Scans Today</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value"><?php echo $remaining; ?></span>
+                        <span class="stat-label">Remaining</span>
+                    </div>
+                </div>
+
+                <!-- Usage progress (free users only) -->
+                <?php if (!$isPremium): ?>
+                    <div class="usage-card">
+                        <div class="usage-header">
+                            <strong>Daily Usage</strong>
+                            <span><?php echo $todayScans; ?> / 10 scans used</span>
+                        </div>
+                        <div class="progress-bg">
+                            <div class="progress-fill" style="width: <?php echo min(100, ($todayScans / 10) * 100); ?>%"></div>
+                        </div>
                     </div>
                 <?php endif; ?>
-            </div>
-            <div class="profile-info">
-                <h1><?php echo htmlspecialchars($_SESSION['user_name']); ?></h1>
-                <p class="email"><?php echo htmlspecialchars($_SESSION['user_email']); ?></p>
-                <span class="badge <?php echo !empty($_SESSION['is_premium']) ? 'premium' : ''; ?>">
-                    <?php echo !empty($_SESSION['is_premium']) ? '★ Premium' : 'Free Plan'; ?>
-                </span>
-            </div>
-        </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value"><?php echo count($scans); ?></div>
-                <div class="stat-label">Total Scans</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value"><?php echo $todayScans; ?></div>
-                <div class="stat-label">Scans Today</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value"><?php echo $remaining; ?></div>
-                <div class="stat-label">Remaining (<?php echo $limit; ?>)</div>
-            </div>
-        </div>
+                <!-- Info tiles -->
+                <div class="info-tiles">
+                    <div class="info-tile">
+                        <span class="tile-label">Account type</span>
+                        <span class="tile-value"><?php echo $isPremium ? 'Premium' : 'Free'; ?></span>
+                    </div>
+                    <div class="info-tile">
+                        <span class="tile-label">Sign-in method</span>
+                        <span class="tile-value">Google OAuth</span>
+                    </div>
+                    <div class="info-tile">
+                        <span class="tile-label">History shown</span>
+                        <span class="tile-value">Last 20 scans</span>
+                    </div>
+                    <div class="info-tile">
+                        <span class="tile-label">Daily quota</span>
+                        <span class="tile-value"><?php echo $limit; ?></span>
+                    </div>
+                </div>
 
-        <div class="actions">
-            <a href="<?php echo htmlspecialchars(app_path('chat')); ?>" class="btn btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14M5 12h14" />
-                </svg>
-                New Scan
-            </a>
-            <?php if (empty($_SESSION['is_premium'])): ?>
-                <a href="<?php echo htmlspecialchars(app_path('premium')); ?>" class="btn btn-premium">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.86L12 17.77l-6.18 3.23L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
-                    Upgrade to Premium
-                </a>
-            <?php endif; ?>
-        </div>
+            </div><!-- /right-col -->
+        </div><!-- /profile-shell -->
 
+        <!-- Scan History -->
         <div class="history-section">
             <div class="history-header">
                 <h2>Scan History</h2>
@@ -935,39 +1086,28 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <p>No scans yet. Start by clicking "New Scan" above!</p>
+                        <p>No scans yet. Click "New Scan" above to get started!</p>
                     </div>
                 <?php else: ?>
                     <?php foreach ($scans as $scan):
                         $score = (int)($scan['plagiarism_score'] ?? 0);
                         $scoreClass = $score < 20 ? 'score-low' : ($score < 50 ? 'score-med' : 'score-high');
-                        $resultData = json_decode($scan['result_data'] ?? '{}', true);
-                        $sources = $resultData['sources'] ?? [];
                     ?>
-                        <div class="history-item" onclick="openScanModal(<?php echo htmlspecialchars(json_encode($scan)); ?>)" style="cursor: pointer;">
-                            <div class="history-preview">
-                                <p><?php echo htmlspecialchars($scan['text_preview'] ?? 'File upload'); ?></p>
-                                <div class="history-meta">
-                                    <span class="score-badge <?php echo $scoreClass; ?>">
-                                        <?php echo $score; ?>% match
-                                    </span>
-                                    <span class="history-date">
-                                        <?php echo date('M j, Y g:i A', strtotime($scan['created_at'])); ?>
-                                    </span>
-                                    <span class="view-details">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
-                                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                        Click to view details
-                                    </span>
+                        <div class="history-item" onclick="openScanModal(<?php echo htmlspecialchars(json_encode($scan)); ?>)">
+                            <div class="h-preview">
+                                <div class="h-text"><?php echo htmlspecialchars($scan['text_preview'] ?? 'File upload'); ?></div>
+                                <div class="h-meta">
+                                    <span class="score-pill <?php echo $scoreClass; ?>"><?php echo $score; ?>% match</span>
+                                    <span class="h-date"><?php echo date('M j, Y · g:i A', strtotime($scan['created_at'])); ?></span>
                                 </div>
                             </div>
+                            <span class="h-chevron">›</span>
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
         </div>
+
     </main>
 
     <!-- Scan Detail Modal -->
@@ -976,122 +1116,100 @@ $avatar = $_SESSION['user_avatar'] ?? $user['avatar'] ?? null;
             <div class="modal-header">
                 <h3>Scan Details</h3>
                 <button class="modal-close" onclick="closeScanModal()" aria-label="Close">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 6 6 18M6 6l12 12" />
                     </svg>
                 </button>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Content loaded dynamically -->
-            </div>
+            <div class="modal-body" id="modalBody"></div>
         </div>
     </div>
 
     <script>
-        // Dark mode toggle
+        // ── Dark mode ──
+        const html = document.documentElement;
         const dmToggle = document.getElementById('dmToggle');
         const sunIcon = document.getElementById('sunIcon');
         const moonIcon = document.getElementById('moonIcon');
-        const html = document.documentElement;
 
-        function updateThemeIcon() {
-            const isDark = html.getAttribute('data-theme') === 'dark';
-            sunIcon.style.display = isDark ? 'none' : 'block';
-            moonIcon.style.display = isDark ? 'block' : 'none';
+        function applyTheme(dark) {
+            html.setAttribute('data-theme', dark ? 'dark' : 'light');
+            sunIcon.style.display = dark ? 'none' : 'block';
+            moonIcon.style.display = dark ? 'block' : 'none';
         }
 
-        // Check saved preference
-        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            html.setAttribute('data-theme', 'dark');
-        }
-        updateThemeIcon();
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(savedTheme === 'dark' || (!savedTheme && prefersDark));
 
         dmToggle.addEventListener('click', () => {
             const isDark = html.getAttribute('data-theme') === 'dark';
-            if (isDark) {
-                html.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            } else {
-                html.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            }
-            updateThemeIcon();
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            applyTheme(!isDark);
         });
 
-        // Modal functions
-        function openScanModal(scan) {
-            const modal = document.getElementById('scanModal');
-            const body = document.getElementById('modalBody');
+        // ── Modal ──
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
 
+        function openScanModal(scan) {
             const resultData = JSON.parse(scan.result_data || '{}');
             const sources = resultData.sources || [];
             const score = Math.round(scan.plagiarism_score || 0);
+            const cls = score < 20 ? 'low' : score < 50 ? 'med' : 'high';
+            const verdict = cls === 'low' ? 'Low match' : cls === 'med' ? 'Moderate match' : 'High match';
+            const fullText = resultData.text ? escapeHtml(resultData.text) : '';
 
-            let sourcesHtml = '';
-            if (sources.length === 0) {
-                sourcesHtml = '<p style="color: var(--muted); text-align: center; padding: 20px;">No matching sources found.</p>';
-            } else {
-                sourcesHtml = sources.map((src, i) => `
+            const sourcesHtml = sources.length === 0 ?
+                '<p style="color:var(--muted);text-align:center;padding:20px;font-family:var(--font-mono);font-size:13px;">No matching sources found.</p>' :
+                sources.map((src, i) => `
                     <div class="source-item">
                         <div class="source-rank">${String(i + 1).padStart(2, '0')}</div>
                         <div class="source-info">
                             <div class="source-title">${escapeHtml(src.title || 'Untitled')}</div>
                             <a class="source-url" href="${escapeHtml(src.url || '#')}" target="_blank" rel="noopener">${escapeHtml(src.url || '')}</a>
-                            <div class="source-match">Match: ${src.score ? src.score.toFixed(1) : '0'}% | ${src.plagiarismWords || 0} words</div>
+                            <div class="source-match">Match: ${(src.score || 0).toFixed(1)}% &nbsp;·&nbsp; ${src.plagiarismWords || 0} words</div>
                         </div>
-                    </div>
-                `).join('');
-            }
+                    </div>`).join('');
 
-            // Get full original text
-            const fullText = resultData.text ? escapeHtml(resultData.text) : '';
-            const textTooLong = fullText.length > 3000;
-
-            body.innerHTML = `
-                <div class="scan-summary">
-                    <div class="scan-score ${score > 50 ? 'high' : score > 20 ? 'med' : 'low'}">
-                        <span class="score-num">${score}%</span>
-                        <span class="score-label">Plagiarism Score</span>
-                    </div>
-                    <div class="scan-meta">
-                        <p><strong>Date:</strong> ${new Date(scan.created_at).toLocaleString()}</p>
-                        <p><strong>Sources Found:</strong> ${sources.length}</p>
-                        ${scan.file_name ? `<p><strong>File:</strong> ${escapeHtml(scan.file_name)}</p>` : ''}
+            document.getElementById('modalBody').innerHTML = `
+                <div class="scan-score-block ${cls}">
+                    <span class="big-score">${score}%</span>
+                    <div>
+                        <div style="font-size:16px;font-weight:600;font-family:var(--font-display);">${verdict}</div>
+                        <div class="score-label">Plagiarism score</div>
                     </div>
                 </div>
-                
+                <div class="scan-meta-grid">
+                    <div class="scan-meta-row"><strong>Date scanned:</strong> ${new Date(scan.created_at).toLocaleString()}</div>
+                    <div class="scan-meta-row"><strong>Sources found:</strong> ${sources.length}</div>
+                    ${scan.file_name ? `<div class="scan-meta-row"><strong>File:</strong> ${escapeHtml(scan.file_name)}</div>` : ''}
+                </div>
                 ${fullText ? `
                 <div class="text-section">
                     <h4>Original Text</h4>
                     <div class="text-content">${fullText}</div>
-                </div>
-                ` : ''}
-                
+                </div>` : ''}
                 <div class="sources-section">
                     <h4>Matching Sources (${sources.length})</h4>
-                    <div class="sources-list">${sourcesHtml}</div>
-                </div>
-            `;
+                    ${sourcesHtml}
+                </div>`;
 
-            modal.classList.add('open');
+            document.getElementById('scanModal').classList.add('open');
             document.body.style.overflow = 'hidden';
         }
 
         function closeScanModal(event) {
-            if (!event || event.target.id === 'scanModal' || event.target.classList.contains('modal-close')) {
+            if (!event || event.target.id === 'scanModal') {
                 document.getElementById('scanModal').classList.remove('open');
                 document.body.style.overflow = '';
             }
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', e => {
             if (e.key === 'Escape') closeScanModal();
         });
     </script>
