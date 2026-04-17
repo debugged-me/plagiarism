@@ -1,8 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
+require_once __DIR__ . '/../app/secure_config.php';
 require_once __DIR__ . '/../app/database.php';
-session_start();
+require_once __DIR__ . '/../app/session.php';
+start_app_session();
 
 header('Content-Type: application/json');
 
@@ -19,7 +22,7 @@ $limit = isset($_GET['limit']) ? min((int)$_GET['limit'], 100) : 50;
 try {
     $db = PlagiaDatabase::getInstance();
     $scans = $db->getUserScans($userId, $limit);
-    
+
     // Decode result_data JSON for each scan
     foreach ($scans as &$scan) {
         if (!empty($scan['result_data'])) {
@@ -27,7 +30,7 @@ try {
         }
         unset($scan['result_data']); // Remove raw JSON from response
     }
-    
+
     echo json_encode([
         'success' => true,
         'scans' => $scans,

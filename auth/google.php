@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../app/secure_config.php';
-session_start();
+require_once __DIR__ . '/../app/session.php';
+start_app_session();
 
 /**
  * Initiates Google OAuth flow
@@ -16,9 +17,10 @@ if (!defined('GOOGLE_CLIENT_ID') || empty(constant('GOOGLE_CLIENT_ID'))) {
 // Generate state parameter for security
 $state = bin2hex(random_bytes(16));
 $_SESSION['oauth_state'] = $state;
+session_write_close();
 
-// Build OAuth URL - must match exactly what's in Google Console
-$redirectUri = defined('GOOGLE_REDIRECT_URI') ? constant('GOOGLE_REDIRECT_URI') : 'https://' . $_SERVER['HTTP_HOST'] . '/';
+// Build OAuth URL - must match exactly what's in Google Console.
+$redirectUri = resolve_google_redirect_uri();
 
 $params = [
     'client_id' => constant('GOOGLE_CLIENT_ID'),

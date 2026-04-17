@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-session_start();
+require_once __DIR__ . '/../app/session.php';
+start_app_session();
 
 /**
  * Logout user
@@ -13,7 +14,8 @@ unset($_SESSION['user_email']);
 unset($_SESSION['user_name']);
 unset($_SESSION['user_avatar']);
 unset($_SESSION['is_logged_in']);
+session_write_close();
 
 // Redirect to home
-header('Location: /');
+header('Location: ' . app_path('/'));
 exit;

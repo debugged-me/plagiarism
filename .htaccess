@@ -20,7 +20,3 @@ RewriteRule ^api/([a-zA-Z0-9_-]+)$ api/$1.php [L]
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^([a-zA-Z0-9_-]+)$ $1.php [L]
-
-# optional: force remove .php from URL
-RewriteCond %{THE_REQUEST} \s/+([^.]+)\.php[\s?] [NC]
-RewriteRule ^ %1 [R=301,L]

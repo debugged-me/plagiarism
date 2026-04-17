@@ -14,21 +14,26 @@ class PlagiaDatabase
 
     private function __construct()
     {
-        // Check if MySQL config exists, otherwise use SQLite
-        if (defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER')) {
-            $this->dbType = 'mysql';
-            $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
-            $this->pdo = new PDO($dsn, DB_USER, defined('DB_PASS') ? DB_PASS : '');
-        } else {
-            $this->dbType = 'sqlite';
-            $dbPath = __DIR__ . '/../data/plagiascope.db';
-            $dbDir = dirname($dbPath);
+        $useMysql = defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER');
+        $fallback = $this->shouldFallbackToSqlite();
+        error_log('DB: useMysql=' . ($useMysql ? 'yes' : 'no') . ', fallback=' . ($fallback ? 'yes' : 'no') . ', host=' . ($_SERVER['HTTP_HOST'] ?? 'none'));
 
-            if (!is_dir($dbDir)) {
-                mkdir($dbDir, 0777, true);
+        if ($useMysql) {
+            try {
+                $this->connectMysql();
+                error_log('DB: Connected to MySQL');
+            } catch (PDOException $e) {
+                if (!$fallback) {
+                    error_log('DB: MySQL failed, not falling back. Error: ' . $e->getMessage());
+                    throw $e;
+                }
+
+                error_log('DB: MySQL unavailable, falling back to SQLite: ' . $e->getMessage());
+                $this->connectSqlite();
             }
-
-            $this->pdo = new PDO('sqlite:' . $dbPath);
+        } else {
+            error_log('DB: Using SQLite (no MySQL config)');
+            $this->connectSqlite();
         }
 
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -37,6 +42,75 @@ class PlagiaDatabase
         if ($this->dbType === 'sqlite') {
             $this->initTablesSqlite();
         }
+    }
+
+    private function connectMysql(): void
+    {
+        $this->dbType = 'mysql';
+        $password = defined('DB_PASS') ? DB_PASS : '';
+        $dsn = $this->buildMysqlDsn(DB_HOST);
+
+        try {
+            $this->pdo = new PDO($dsn, DB_USER, $password);
+            return;
+        } catch (PDOException $e) {
+            if (!$this->shouldRetryMysqlOverTcp($e)) {
+                throw $e;
+            }
+        }
+
+        $fallbackDsn = $this->buildMysqlDsn('127.0.0.1');
+        $this->pdo = new PDO($fallbackDsn, DB_USER, $password);
+    }
+
+    private function buildMysqlDsn(string $host): string
+    {
+        return 'mysql:host=' . $host . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+    }
+
+    private function connectSqlite(): void
+    {
+        $this->dbType = 'sqlite';
+        $dbPath = __DIR__ . '/../data/plagiascope.db';
+        $dbDir = dirname($dbPath);
+
+        if (!is_dir($dbDir)) {
+            mkdir($dbDir, 0777, true);
+        }
+
+        $this->pdo = new PDO('sqlite:' . $dbPath);
+        error_log('DB: SQLite connected to ' . $dbPath . ', file_exists=' . (file_exists($dbPath) ? 'yes' : 'no'));
+    }
+
+    private function shouldFallbackToSqlite(): bool
+    {
+        if (defined('FORCE_SQLITE') && FORCE_SQLITE) {
+            return true;
+        }
+
+        $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? ''));
+        $serverAddr = (string)($_SERVER['SERVER_ADDR'] ?? '');
+
+        return $host === ''
+            || str_contains($host, 'localhost')
+            || str_contains($host, '127.0.0.1')
+            || str_contains($host, '::1')
+            || $serverAddr === '127.0.0.1'
+            || $serverAddr === '::1';
+    }
+
+    private function shouldRetryMysqlOverTcp(PDOException $e): bool
+    {
+        if (!$this->shouldFallbackToSqlite()) {
+            return false;
+        }
+
+        if (!defined('DB_HOST') || strtolower((string) DB_HOST) !== 'localhost') {
+            return false;
+        }
+
+        return str_contains($e->getMessage(), '[2002]')
+            || str_contains(strtolower($e->getMessage()), 'no such file or directory');
     }
 
     public static function getInstance(): self
@@ -86,6 +160,7 @@ class PlagiaDatabase
      */
     public function findOrCreateUser(array $googleData): array
     {
+        error_log('DB: findOrCreateUser on ' . $this->dbType);
         // Try to find existing user
         $stmt = $this->pdo->prepare("SELECT * FROM users WHERE google_id = ?");
         $stmt->execute([$googleData['id']]);
@@ -106,15 +181,22 @@ class PlagiaDatabase
             $googleData['name'],
             $googleData['picture'] ?? null
         ]);
+        $newId = (int)$this->pdo->lastInsertId();
+        error_log('DB: Created new user with id=' . $newId);
 
-        return $this->getUserById((int)$this->pdo->lastInsertId());
+        // Immediately try to fetch it back
+        $newUser = $this->getUserById($newId);
+        error_log('DB: Immediately fetched new user: ' . ($newUser ? 'found' : 'NOT FOUND'));
+        return $newUser;
     }
 
     public function getUserById(int $id): ?array
     {
+        error_log('DB: getUserById(' . $id . ') on ' . $this->dbType);
         $stmt = $this->pdo->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->execute([$id]);
         $user = $stmt->fetch();
+        error_log('DB: getUserById result=' . ($user ? 'found' : 'not found'));
         return $user ?: null;
     }
 
@@ -129,7 +211,15 @@ class PlagiaDatabase
             (user_id, session_id, text_preview, file_name, plagiarism_score, sources_count, result_data) 
             VALUES (?, ?, ?, ?, ?, ?, ?)");
 
-        $resultData = json_encode($data['result'] ?? []);
+        // Include original text and file info in result_data for display
+        $resultToSave = $data['result'] ?? [];
+        if (!empty($data['text'])) {
+            $resultToSave['text'] = $data['text'];
+        }
+        if (!empty($data['file_name'])) {
+            $resultToSave['file_name'] = $data['file_name'];
+        }
+        $resultData = json_encode($resultToSave);
 
         $stmt->execute([
             $userId,
@@ -149,8 +239,10 @@ class PlagiaDatabase
      */
     public function getUserScans(int $userId, int $limit = 50): array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM scans WHERE user_id = ? ORDER BY created_at DESC LIMIT ?");
-        $stmt->execute([$userId, $limit]);
+        // LIMIT must be cast to int directly for MySQL compatibility
+        $sql = "SELECT * FROM scans WHERE user_id = ? ORDER BY created_at DESC LIMIT " . (int)$limit;
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$userId]);
         return $stmt->fetchAll();
     }
 
@@ -159,16 +251,19 @@ class PlagiaDatabase
      */
     public function countSessionScans(string $sessionId, int $hours = 24): int
     {
+        $hours = (int)$hours;
         if ($this->dbType === 'mysql') {
-            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM scans 
+            $sql = "SELECT COUNT(*) FROM scans 
                 WHERE session_id = ? AND user_id IS NULL 
-                AND created_at > DATE_SUB(NOW(), INTERVAL ? HOUR)");
+                AND created_at > DATE_SUB(NOW(), INTERVAL {$hours} HOUR)";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$sessionId]);
         } else {
             $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM scans 
                 WHERE session_id = ? AND user_id IS NULL 
-                AND created_at > datetime('now', '-? hours')");
+                AND created_at > datetime('now', '-{$hours} hours')");
+            $stmt->execute([$sessionId]);
         }
-        $stmt->execute([$sessionId, $hours]);
         return (int)$stmt->fetchColumn();
     }
 

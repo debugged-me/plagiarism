@@ -1,3 +1,6 @@
+<?php
+require_once __DIR__ . '/app/url.php';
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 
@@ -6,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlagiaScope | AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Antique&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="<?php echo htmlspecialchars(app_path('favicon.svg')); ?>" type="image/svg+xml">
     <style>
         *,
         *::before,
@@ -1928,7 +1931,10 @@
             <div class="ld-orbit">
                 <div class="ld-orb-dot"></div>
             </div>
-            <div class="ld-center">🔍</div>
+            <div class="ld-center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg></div>
         </div>
         <div class="ld-title">Plagia<em>Scope</em></div>
         <div class="ld-sub">Research Integrity Tool</div>
@@ -1946,8 +1952,11 @@
     <div id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
 
     <nav id="mainNav">
-        <a class="nav-brand" href="landing">
-            <div class="nav-icon">🔍</div>
+        <a class="nav-brand" href="<?php echo htmlspecialchars(app_path('/')); ?>">
+            <div class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg></div>
             <div class="nav-logo-text">Plagia<em>Scope</em></div>
         </a>
         <ul class="nav-links">
@@ -1955,8 +1964,16 @@
             <li><a href="#features">Features</a></li>
         </ul>
         <div class="nav-r">
-            <button class="dm-btn" id="dmBtn">🌙</button>
-            <a class="nav-cta" href="chat.php">Open Checker <span class="arr">→</span></a>
+            <button class="dm-btn" id="dmBtn" style="display: grid; place-items: center;">
+                <svg id="dmSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5" />
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                </svg>
+                <svg id="dmMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+            </button>
+            <a class="nav-cta" href="<?php echo htmlspecialchars(app_path('chat')); ?>">Open Checker <span class="arr">→</span></a>
         </div>
     </nav>
 
@@ -1981,7 +1998,7 @@
         </p>
 
         <div class="hero-ctas">
-            <a class="btn-main" href="chat">Start Checking Free <span class="arr">→</span></a>
+            <a class="btn-main" href="<?php echo htmlspecialchars(app_path('chat')); ?>">Start Checking Free <span class="arr">→</span></a>
             <a class="btn-out" href="#how">See how it works</a>
         </div>
 
@@ -2004,28 +2021,62 @@
 
     <div class="marquee-wrap">
         <div class="marquee-track">
-            <div class="marquee-item"><span>✦</span> Verbatim Detection</div>
-            <div class="marquee-item"><span>✦</span> Paraphrase Analysis</div>
-            <div class="marquee-item"><span>✦</span> Citation Integrity</div>
-            <div class="marquee-item"><span>✦</span> Source Attribution</div>
-            <div class="marquee-item"><span>✦</span> 47 Languages</div>
-            <div class="marquee-item"><span>✦</span> File Upload Support</div>
-            <div class="marquee-item"><span>✦</span> PDF · DOC · DOCX</div>
-            <div class="marquee-item"><span>✦</span> AI-Powered Scanning</div>
-            <div class="marquee-item"><span>✦</span> Verbatim Detection</div>
-            <div class="marquee-item"><span>✦</span> Paraphrase Analysis</div>
-            <div class="marquee-item"><span>✦</span> Citation Integrity</div>
-            <div class="marquee-item"><span>✦</span> Source Attribution</div>
-            <div class="marquee-item"><span>✦</span> 47 Languages</div>
-            <div class="marquee-item"><span>✦</span> File Upload Support</div>
-            <div class="marquee-item"><span>✦</span> PDF · DOC · DOCX</div>
-            <div class="marquee-item"><span>✦</span> AI-Powered Scanning</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Verbatim Detection</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Paraphrase Analysis</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Citation Integrity</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Source Attribution</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> 47 Languages</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> File Upload Support</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> PDF · DOC · DOCX</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> AI-Powered Scanning</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Verbatim Detection</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Paraphrase Analysis</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Citation Integrity</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Source Attribution</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> 47 Languages</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> File Upload Support</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> PDF · DOC · DOCX</div>
+            <div class="marquee-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> AI-Powered Scanning</div>
         </div>
     </div>
 
     <section class="demo-section">
         <div class="reveal">
-            <div class="section-tag">✦ Live Preview</div>
+            <div class="section-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 6px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Live Preview</div>
             <h2 class="section-h">See it in <em>action</em></h2>
             <p class="section-p">Paste your text, hit analyze, and get a full integrity report in under 30 seconds.</p>
         </div>
@@ -2077,7 +2128,9 @@
 
     <section class="how-section" id="how">
         <div class="reveal">
-            <div class="section-tag">✦ Process</div>
+            <div class="section-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 6px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Process</div>
             <h2 class="section-h">How it <em>works</em></h2>
             <p class="section-p">Three steps from paste to results — no account, no sign-up required.</p>
         </div>
@@ -2085,19 +2138,33 @@
         <div class="steps-grid">
             <div class="step">
                 <div class="step-num">01</div>
-                <div class="step-ico">📋</div>
+                <div class="step-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+                        <path d="M9 2v4" />
+                        <path d="M15 2v4" />
+                        <path d="M12 12v.01" />
+                        <path d="M12 16v.01" />
+                    </svg></div>
                 <div class="step-title">Paste text or upload a file</div>
                 <div class="step-desc">Paste your English research paper or upload PDF, DOC, or DOCX. Works with anything from a paragraph to a full paper.</div>
             </div>
             <div class="step">
                 <div class="step-num">02</div>
-                <div class="step-ico">🔍</div>
+                <div class="step-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg></div>
                 <div class="step-title">Winston AI scans 400B sources</div>
                 <div class="step-desc">Your text is compared against billions of webpages, academic publications, and databases to find any matching content.</div>
             </div>
             <div class="step">
                 <div class="step-num">03</div>
-                <div class="step-ico">📊</div>
+                <div class="step-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 17V9" />
+                        <path d="M13 17V5" />
+                        <path d="M8 17v-3" />
+                    </svg></div>
                 <div class="step-title">Get your full report</div>
                 <div class="step-desc">Receive an originality score, annotated text with highlighted passages, and a ranked list of matching sources — in seconds.</div>
             </div>
@@ -2106,32 +2173,47 @@
 
     <section class="feat-section" id="features">
         <div class="reveal">
-            <div class="section-tag">✦ Capabilities</div>
+            <div class="section-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 6px;">
+                    <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+                </svg> Capabilities</div>
             <h2 class="section-h">Everything you need to <em>submit</em> with confidence</h2>
             <p class="section-p">Built for students, researchers, and academics who take integrity seriously.</p>
         </div>
 
         <div class="feat-grid">
             <div class="feat">
-                <div class="feat-ico">🔍</div>
+                <div class="feat-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg></div>
                 <div class="feat-title">Verbatim Detection</div>
                 <div class="feat-desc">Identifies exact text matches and direct copy-paste patterns against billions of published sources and academic databases.</div>
                 <span class="feat-tag">Core check</span>
             </div>
             <div class="feat">
-                <div class="feat-ico">📄</div>
+                <div class="feat-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg></div>
                 <div class="feat-title">File Upload Support</div>
                 <div class="feat-desc">Upload PDF, DOC, or DOCX files directly. Winston AI extracts and scans the full text — no copy-pasting needed for long documents.</div>
                 <span class="feat-tag">PDF · DOC · DOCX</span>
             </div>
             <div class="feat">
-                <div class="feat-ico">📚</div>
+                <div class="feat-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg></div>
                 <div class="feat-title">Source Attribution</div>
                 <div class="feat-desc">Every flagged passage is linked to its matching source — title, URL, match percentage, and the exact plagiarized sequences.</div>
                 <span class="feat-tag">Full traceability</span>
             </div>
             <div class="feat">
-                <div class="feat-ico">🌐</div>
+                <div class="feat-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M2 12h20" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg></div>
                 <div class="feat-title">47 Languages</div>
                 <div class="feat-desc">Supports English and 46 other languages with automatic detection. Optimized for English academic writing with country-specific scanning.</div>
                 <span class="feat-tag">Auto-detect</span>
@@ -2148,14 +2230,17 @@
                 <div class="cta-eyebrow">Ready when you are</div>
                 <h2 class="cta-h">Check your research.<br><em>Right now.</em></h2>
                 <p class="cta-p">No sign-up. No waiting. Paste your text or upload your file and get results in seconds.</p>
-                <a class="btn-white" href="chat">Open PlagiaScope <span class="arr">→</span></a>
+                <a class="btn-white" href="<?php echo htmlspecialchars(app_path('chat')); ?>">Open PlagiaScope <span class="arr">→</span></a>
             </div>
         </div>
     </section>
 
     <footer>
-        <a class="ft-brand" href="#">
-            <div class="ft-icon">🔍</div>
+        <a class="ft-brand" href="<?php echo htmlspecialchars(app_path('/')); ?>">
+            <div class="ft-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg></div>
             <div class="ft-name">Plagia<em>Scope</em></div>
         </a>
         <div class="ft-copy">© 2026 PlagiaScope · Powered by Winston AI</div>
@@ -2174,16 +2259,26 @@
 
         const htmlEl = document.documentElement;
         const dmBtn = document.getElementById('dmBtn');
+        const dmSun = document.getElementById('dmSun');
+        const dmMoon = document.getElementById('dmMoon');
+
+        function updateThemeIcon() {
+            const isDark = htmlEl.getAttribute('data-theme') === 'dark';
+            dmSun.style.display = isDark ? 'block' : 'none';
+            dmMoon.style.display = isDark ? 'none' : 'block';
+        }
+
         const saved = localStorage.getItem('ps-theme');
         if (saved) {
             htmlEl.setAttribute('data-theme', saved);
-            dmBtn.textContent = saved === 'dark' ? '☀️' : '🌙';
         }
+        updateThemeIcon();
+
         dmBtn.addEventListener('click', () => {
             const next = htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             htmlEl.setAttribute('data-theme', next);
-            dmBtn.textContent = next === 'dark' ? '☀️' : '🌙';
             localStorage.setItem('ps-theme', next);
+            updateThemeIcon();
         });
 
         const mainNav = document.getElementById('mainNav');

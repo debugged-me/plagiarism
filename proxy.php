@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/app/secure_config.php';
-session_start();
+require_once __DIR__ . '/app/database.php';
+require_once __DIR__ . '/app/session.php';
+start_app_session();
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -75,25 +77,25 @@ $userId = $_SESSION['user_id'] ?? null;
 
 // Rate limiting based on user type
 if ($isLoggedIn && $userId) {
-    // Logged-in users: 50 scans per day
-    require_once __DIR__ . '/app/database.php';
+    // Logged-in users: 10 scans per day (free tier)
     try {
         $db = PlagiaDatabase::getInstance();
         $todayScans = $db->countUserScansToday((int)$userId);
 
-        // Premium users get unlimited, regular users get 50/day
-        $limit = !empty($_SESSION['is_premium']) ? PHP_INT_MAX : 50;
+        // Premium users get unlimited, regular users get 10/day
+        $limit = !empty($_SESSION['is_premium']) ? PHP_INT_MAX : 10;
 
         if ($todayScans >= $limit) {
             http_response_code(429);
             echo json_encode([
-                'error' => 'Daily scan limit reached. You can scan up to 50 times per day. Upgrade to premium for unlimited scans.',
+                'error' => 'Daily scan limit reached. Free users can scan up to 10 times per day. Upgrade to premium for unlimited scans.',
                 'limit_reached' => true,
-                'scans_today' => $todayScans
+                'scans_today' => $todayScans,
+                'show_premium' => true
             ]);
             exit;
         }
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         // Database error - fall back to session-based limiting
         error_log('Database error in rate limiting: ' . $e->getMessage());
     }
@@ -108,7 +110,7 @@ if ($isLoggedIn && $userId) {
         echo json_encode([
             'error' => 'Guests are limited to 1 scan. Please sign in with Google to get unlimited scans and save your history.',
             'require_login' => true,
-            'login_url' => '/auth/google.php'
+            'login_url' => app_path('auth/google')
         ]);
         exit;
     }
@@ -397,11 +399,12 @@ if ($finalHttpCode >= 200 && $finalHttpCode < 300) {
     try {
         $db = PlagiaDatabase::getInstance();
         $resultData = json_decode($finalResponse, true);
+        $resultSummary = is_array($resultData['result'] ?? null) ? $resultData['result'] : $resultData;
 
         $scanData = [
             'text' => $text,
             'file_name' => $_FILES['file']['name'] ?? null,
-            'score' => $resultData['score'] ?? 0,
+            'score' => $resultSummary['score'] ?? 0,
             'sources' => count($resultData['sources'] ?? []),
             'result' => $resultData
         ];
@@ -411,7 +414,7 @@ if ($finalHttpCode >= 200 && $finalHttpCode < 300) {
             session_id(),
             $scanData
         );
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         error_log('Failed to save scan history: ' . $e->getMessage());
     }
 }

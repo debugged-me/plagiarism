@@ -1,4 +1,7 @@
-<?php session_start(); ?>
+<?php
+require_once __DIR__ . '/app/session.php';
+start_app_session();
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 
@@ -221,6 +224,31 @@
     }
 
     /* ─── AUTH & USER STYLES ─── */
+    .nav-link {
+      height: 36px;
+      padding: 0 14px;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .2s;
+    }
+
+    .nav-link:hover {
+      color: var(--accent);
+      border-color: var(--acc-brd);
+      background: var(--acc-soft);
+      transform: translateY(-2px);
+    }
+
     .login-btn {
       height: 36px;
       padding: 0 16px;
@@ -1797,17 +1825,31 @@
   <div id="spb"></div>
 
   <nav class="topbar">
-    <a class="brand" href="/">
-      <div class="brand-ico">🔍</div>
+    <a class="brand" href="<?php echo htmlspecialchars(app_path('/')); ?>">
+      <div class="brand-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg></div>
       <div class="brand-name">Plagia<em>Scope</em></div>
     </a>
     <div class="top-r">
-      <button class="dm-btn" id="dmBtn">🌙</button>
+      <button class="dm-btn" id="dmBtn" style="display: grid; place-items: center;">
+        <svg id="dmSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5" />
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+        <svg id="dmMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+        </svg>
+      </button>
 
       <?php if (!empty($_SESSION['is_logged_in'])): ?>
         <!-- Logged in user -->
         <button class="history-toggle" id="historyToggle" title="View scan history">
-          📜 History
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg> History
         </button>
         <div class="user-menu" id="userMenu">
           <span class="user-name"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></span>
@@ -1815,25 +1857,51 @@
             alt="Avatar" class="user-avatar" id="userAvatar">
           <div class="user-dropdown">
             <div class="dropdown-item">
-              <span>👤</span> <?php echo htmlspecialchars($_SESSION['user_email'] ?? ''); ?>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg> <?php echo htmlspecialchars($_SESSION['user_email'] ?? ''); ?>
             </div>
             <div class="dropdown-divider"></div>
-            <a href="/user.php" class="dropdown-item">
-              <span>📊</span> My Account
+            <a href="<?php echo htmlspecialchars(app_path('/')); ?>" class="dropdown-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg> Home
             </a>
-            <a href="/auth/logout.php" class="dropdown-item">
-              <span>🚪</span> Logout
+            <a href="<?php echo htmlspecialchars(app_path('user')); ?>" class="dropdown-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+                <path d="M3 3v18h18" />
+                <path d="M18 17V9" />
+                <path d="M13 17V5" />
+                <path d="M8 17v-3" />
+              </svg> My Account
+            </a>
+            <a href="<?php echo htmlspecialchars(app_path('auth/logout')); ?>" class="dropdown-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg> Logout
             </a>
           </div>
         </div>
       <?php else: ?>
         <!-- Guest user -->
-        <a href="/auth/google.php" class="login-btn">
-          <span>🔐</span> Sign in with Google
+        <a href="<?php echo htmlspecialchars(app_path('/')); ?>" class="nav-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg> Home
+        </a>
+        <a href="<?php echo htmlspecialchars(app_path('auth/google')); ?>" class="login-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg> Sign in with Google
         </a>
       <?php endif; ?>
 
-      <a class="back-link" href="/">← Home</a>
     </div>
   </nav>
 
@@ -1842,8 +1910,13 @@
     <div class="history-overlay" id="historyOverlay"></div>
     <div class="history-panel" id="historyPanel">
       <div class="history-header">
-        <div class="history-title">📜 Scan History</div>
-        <button class="history-close" id="historyClose">✕</button>
+        <div class="history-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg> Scan History</div>
+        <button class="history-close" id="historyClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg></button>
       </div>
       <div class="history-list" id="historyList">
         <div class="history-empty">Loading your scan history...</div>
@@ -1853,7 +1926,9 @@
 
   <div class="page">
     <div class="pg-header">
-      <div class="pg-eyebrow">✦ Winston AI · English Research</div>
+      <div class="pg-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-right: 4px;">
+          <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+        </svg> Winston AI · English Research</div>
       <h1 class="pg-title">Research <em>Integrity</em> Checker</h1>
       <p class="pg-sub">Paste your text or upload a file — get your plagiarism report in seconds.</p>
     </div>
@@ -1871,7 +1946,10 @@
       <div class="text-panel" id="textPanel">
         <div class="card">
           <div class="card-head">
-            <div class="card-ico">📝</div>
+            <div class="card-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z" />
+              </svg></div>
             <div>
               <div class="card-title">Research Text</div>
               <div class="card-sub">Min 100 characters · Max 120,000 characters</div>
@@ -1926,7 +2004,10 @@
         <div class="s-orbit">
           <div class="s-dot"></div>
         </div>
-        <div class="s-center">🔍</div>
+        <div class="s-center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg></div>
       </div>
       <div class="ld-text">
         <strong id="ldPhase">Connecting to Winston AI…</strong>
@@ -2001,18 +2082,22 @@
 
   <script>
     const TURNSTILE_SITE_KEY = '0x4AAAAAACu7HA_zSWn5iEok';
+    const proxyUrl = <?php echo json_encode(app_path('proxy')); ?>;
+    const historyUrl = <?php echo json_encode(app_path('api/history')); ?>;
 
     const htmlEl = document.documentElement;
     const dmBtn = document.getElementById('dmBtn');
     const saved = localStorage.getItem('ps-theme');
     if (saved) {
       htmlEl.setAttribute('data-theme', saved);
-      dmBtn.textContent = saved === 'dark' ? '☀️' : '🌙';
+      document.getElementById('dmSun').style.display = saved === 'dark' ? 'block' : 'none';
+      document.getElementById('dmMoon').style.display = saved === 'dark' ? 'none' : 'block';
     }
     dmBtn.addEventListener('click', () => {
       const next = htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       htmlEl.setAttribute('data-theme', next);
-      dmBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+      document.getElementById('dmSun').style.display = next === 'dark' ? 'block' : 'none';
+      document.getElementById('dmMoon').style.display = next === 'dark' ? 'none' : 'block';
       localStorage.setItem('ps-theme', next);
     });
 
@@ -2060,7 +2145,7 @@
       hideErr();
       document.getElementById('dropZone').style.display = 'none';
       document.getElementById('fprev').classList.add('on');
-      document.getElementById('fprevIco').textContent = ext === 'pdf' ? '📕' : '📘';
+      document.getElementById('fprevIco').innerHTML = ext === 'pdf' ? '<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z\"/><polyline points=\"14 2 14 8 20 8\"/><path d=\"M9 15v-2"/><path d=\"M12 15v-6"/><path d=\"M15 15v-4"/></svg>' : '<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z\"/><polyline points=\"14 2 14 8 20 8\"/></svg>';
       document.getElementById('fprevName').textContent = file.name;
       document.getElementById('fprevSize').textContent = fmtBytes(file.size);
     }
@@ -2098,7 +2183,7 @@
       document.getElementById('cNum').textContent = t.length;
       const wn = document.getElementById('wNum');
       wn.style.color = t.length >= 100 ? 'var(--ok)' : t.length > 50 ? 'var(--warn)' : 'var(--ink2)';
-      document.getElementById('charHint').textContent = t.length >= 100 ? '✓ Ready to scan' : '100 chars minimum';
+      document.getElementById('charHint').textContent = t.length >= 100 ? 'Ready to scan' : '100 chars minimum';
     }
 
     function showErr(msg) {
@@ -2224,9 +2309,21 @@
       startLoading();
 
       try {
-        const res = await fetch('proxy', opts);
+        const res = await fetch(proxyUrl, opts);
         const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || data?.error || `API error ${res.status}`);
+        if (!res.ok) {
+          // Check if limit reached and show premium modal
+          if (res.status === 429 && data.show_premium) {
+            stopLoading();
+            document.getElementById('loadWrap').classList.remove('on');
+            document.getElementById('inputSection').style.display = 'block';
+            document.getElementById('runBtn').disabled = false;
+            resetTurnstileWidget();
+            showPremiumModal(data.scans_today || 0);
+            return;
+          }
+          throw new Error(data?.message || data?.error || `API error ${res.status}`);
+        }
         stopLoading();
         const txt = data.text || (mode === 'text' ? document.getElementById('mainText').value.trim() : '');
         renderResults(data, txt);
@@ -2427,7 +2524,7 @@
 
           async function loadHistory() {
             try {
-              const response = await fetch('/api/history.php');
+              const response = await fetch(historyUrl);
               const data = await response.json();
 
               if (!data.success) {
@@ -2463,10 +2560,11 @@
               }).join('');
 
               // Add click handlers to history items
-              document.querySelectorAll('.history-item').forEach(item => {
+              document.querySelectorAll('.history-item').forEach((item, index) => {
+                item.style.cursor = 'pointer';
                 item.addEventListener('click', () => {
-                  // Could load full scan details here
-                  showToast('Click scan to view full details (coming soon)');
+                  const scan = data.scans[index];
+                  showScanDetailModal(scan);
                 });
               });
 
@@ -2503,6 +2601,200 @@
       toast.textContent = message;
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Scan Detail Modal for history sidebar
+    function showScanDetailModal(scan) {
+      const existing = document.getElementById('scanDetailModal');
+      if (existing) existing.remove();
+
+      const result = scan.result || {};
+      const sources = result.sources || [];
+      const score = Math.round(scan.plagiarism_score || 0);
+      const fullText = result.text ? esc(result.text.substring(0, 2000)) + (result.text.length > 2000 ? '...' : '') : '';
+
+      let sourcesHtml = '';
+      if (sources.length === 0) {
+        sourcesHtml = '<p style="color: var(--muted); text-align: center; padding: 16px;">No matching sources found.</p>';
+      } else {
+        sourcesHtml = sources.slice(0, 5).map((src, i) => `
+          <div style="display: flex; gap: 16px; padding: 16px; border: 1.5px solid var(--border); border-radius: 10px; margin-bottom: 12px; background: var(--surface); transition: all .2s;">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background: var(--s2); display: grid; place-items: center; font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--accent); flex-shrink: 0;">${String(i + 1).padStart(2, '0')}</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; line-height: 1.3;">${esc(src.title || 'Untitled')}</div>
+              <a href="${esc(src.url || '#')}" target="_blank" rel="noopener" style="font-family: var(--font-mono); font-size: 12px; color: var(--accent); word-break: break-all;">${esc(src.url || '')}</a>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 6px;">Match: ${src.score ? src.score.toFixed(1) : '0'}% | ${src.plagiarismWords || 0} words</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const modal = document.createElement('div');
+      modal.id = 'scanDetailModal';
+      modal.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(14, 12, 9, .75);
+        backdrop-filter: blur(8px);
+        z-index: 3000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        animation: fadeIn .3s ease;
+      `;
+
+      modal.innerHTML = `
+        <div style="
+          background: var(--surface);
+          border: 1.5px solid var(--border);
+          border-radius: 16px;
+          box-shadow: var(--sh2), 0 25px 50px -12px rgba(14, 12, 9, .25);
+          width: 100%;
+          max-width: 700px;
+          max-height: 85vh;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          animation: slideUp .4s ease;
+        ">
+          <div style="padding: 20px 28px; border-bottom: 1.5px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--s2);">
+            <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--ink); margin: 0;">Scan Details</h3>
+            <button onclick="this.closest('#scanDetailModal').remove()" style="width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; display: grid; place-items: center; transition: all .2s;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div style="padding: 28px; overflow-y: auto;">
+            <div style="display: flex; gap: 28px; align-items: flex-start; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1.5px solid var(--border);">
+              <div style="text-align: center; padding: 24px 32px; border-radius: 14px; min-width: 140px; flex-shrink: 0; ${score > 50 ? 'background: var(--dbg); border: 2px solid var(--dbrd);' : score > 20 ? 'background: var(--wbg); border: 2px solid var(--wbrd);' : 'background: var(--okbg); border: 2px solid var(--okbrd);'}">
+                <span style="font-family: var(--font-display); font-size: 44px; font-weight: 700; color: ${score > 50 ? 'var(--danger)' : score > 20 ? 'var(--warn)' : 'var(--ok)'}; display: block; line-height: 1;">${score}%</span>
+                <span style="font-family: var(--font-mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-top: 8px; display: block;">Plagiarism Score</span>
+              </div>
+              <div style="flex: 1; display: grid; gap: 10px;">
+                <p style="font-size: 15px; color: var(--ink); margin: 0;"><strong style="color: var(--muted); font-weight: 500; display: inline-block; min-width: 80px;">Date:</strong> ${new Date(scan.created_at).toLocaleString()}</p>
+                <p style="font-size: 15px; color: var(--ink); margin: 0;"><strong style="color: var(--muted); font-weight: 500; display: inline-block; min-width: 80px;">Sources:</strong> ${sources.length}</p>
+                ${scan.file_name ? `<p style="font-size: 15px; color: var(--ink); margin: 0;"><strong style="color: var(--muted); font-weight: 500; display: inline-block; min-width: 80px;">File:</strong> ${esc(scan.file_name)}</p>` : ''}
+              </div>
+            </div>
+            
+            ${fullText ? `
+            <div style="margin-bottom: 24px;">
+              <h4 style="font-family: var(--font-display); font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--ink);">Original Text</h4>
+              <div style="background: var(--s2); border: 1.5px solid var(--border); border-radius: 10px; padding: 16px; font-family: var(--font-body); font-size: 14px; line-height: 1.6; color: var(--ink2); max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${fullText}</div>
+            </div>
+            ` : ''}
+            
+            <div>
+              <h4 style="font-family: var(--font-display); font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--ink);">Matching Sources (${sources.length})</h4>
+              ${sourcesHtml}
+            </div>
+          </div>
+        </div>
+      `;
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') modal.remove();
+      }, {
+        once: true
+      });
+
+      document.body.appendChild(modal);
+    }
+
+    // Premium Modal
+    function showPremiumModal(scansToday) {
+      const existing = document.getElementById('premiumModal');
+      if (existing) existing.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'premiumModal';
+      modal.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(14, 12, 9, .7);
+        backdrop-filter: blur(6px);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: fadeIn .3s ease;
+      `;
+
+      modal.innerHTML = `
+        <div style="
+          background: var(--surface);
+          border: 2px solid var(--accent);
+          border-radius: var(--r);
+          box-shadow: var(--sh2), 0 0 60px rgba(26, 61, 228, .15);
+          width: 100%;
+          max-width: 420px;
+          padding: 32px;
+          text-align: center;
+          animation: slideUp .4s ease;
+        ">
+          <div style="font-size: 48px; margin-bottom: 16px;">⭐</div>
+          <h3 style="
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 12px;
+          ">Daily Limit Reached</h3>
+          <p style="
+            font-family: var(--font-body);
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
+          ">
+            You've used <strong>${scansToday} of 10</strong> free scans today.<br>
+            Upgrade to Premium for unlimited scans and advanced features.
+          </p>
+          <div style="display: flex; gap: 12px; flex-direction: column;">
+            <button onclick="alert('Premium upgrade coming soon!')" style="
+              padding: 14px 24px;
+              background: var(--accent);
+              color: #fff;
+              border: none;
+              border-radius: var(--rx);
+              font-family: var(--font-mono);
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all .2s;
+            " onmouseover="this.style.background='var(--ink)'; this.style.transform='translateY(-2px)';" 
+            onmouseout="this.style.background='var(--accent)'; this.style.transform='none';">
+              Upgrade to Premium
+            </button>
+            <button onclick="this.closest('#premiumModal').remove()" style="
+              padding: 12px 24px;
+              background: transparent;
+              color: var(--muted);
+              border: 1.5px solid var(--border);
+              border-radius: var(--rx);
+              font-family: var(--font-mono);
+              font-size: 13px;
+              font-weight: 500;
+              cursor: pointer;
+              transition: all .2s;
+            " onmouseover="this.style.borderColor='var(--border2)'; this.style.color='var(--ink)';"
+            onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted)';">
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      `;
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+      });
+
+      document.body.appendChild(modal);
     }
   </script>
 </body>
