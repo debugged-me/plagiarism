@@ -5,6 +5,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/app/secure_config.php';
 require_once __DIR__ . '/app/database.php';
 require_once __DIR__ . '/app/session.php';
+if (is_file(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
 start_app_session();
 
 header('Content-Type: application/json');
@@ -141,12 +144,43 @@ function extract_text_from_file(string $filePath, string $ext): ?string
     return null;
 }
 
+function find_binary(string $name): ?string
+{
+    $candidates = [
+        '/opt/homebrew/bin/' . $name,
+        '/usr/local/bin/' . $name,
+        '/usr/bin/' . $name,
+        '/bin/' . $name,
+    ];
+    foreach ($candidates as $path) {
+        if (is_executable($path)) {
+            return $path;
+        }
+    }
+    $found = trim((string) @shell_exec('command -v ' . escapeshellarg($name) . ' 2>/dev/null'));
+    return $found !== '' ? $found : null;
+}
+
 function extract_text_from_pdf(string $filePath): ?string
 {
-    // Try to use pdftotext if available
-    $pdftotext = shell_exec('which pdftotext 2>/dev/null');
+    // Primary: Smalot/PdfParser (pure PHP, works on any host with composer deps installed)
+    if (class_exists(\Smalot\PdfParser\Parser::class)) {
+        try {
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf = $parser->parseFile($filePath);
+            $text = $pdf->getText();
+            if ($text !== '' && strlen($text) > 50) {
+                return clean_extracted_text($text);
+            }
+        } catch (\Throwable $e) {
+            error_log('Smalot PDF parse failed: ' . $e->getMessage());
+        }
+    }
+
+    // Secondary: pdftotext binary if installed
+    $pdftotext = find_binary('pdftotext');
     if ($pdftotext) {
-        $output = shell_exec('pdftotext "' . escapeshellarg($filePath) . '" - 2>/dev/null');
+        $output = shell_exec(escapeshellarg($pdftotext) . ' -layout ' . escapeshellarg($filePath) . ' - 2>/dev/null');
         if ($output && strlen($output) > 50) {
             return clean_extracted_text($output);
         }
@@ -227,17 +261,17 @@ function extract_text_from_docx(string $filePath): ?string
 function extract_text_from_doc(string $filePath): ?string
 {
     // Try to use antiword or catdoc if available
-    $antiword = shell_exec('which antiword 2>/dev/null');
+    $antiword = find_binary('antiword');
     if ($antiword) {
-        $output = shell_exec('antiword "' . escapeshellarg($filePath) . '" 2>/dev/null');
+        $output = shell_exec(escapeshellarg($antiword) . ' ' . escapeshellarg($filePath) . ' 2>/dev/null');
         if ($output && strlen($output) > 50) {
             return clean_extracted_text($output);
         }
     }
 
-    $catdoc = shell_exec('which catdoc 2>/dev/null');
+    $catdoc = find_binary('catdoc');
     if ($catdoc) {
-        $output = shell_exec('catdoc "' . escapeshellarg($filePath) . '" 2>/dev/null');
+        $output = shell_exec(escapeshellarg($catdoc) . ' ' . escapeshellarg($filePath) . ' 2>/dev/null');
         if ($output && strlen($output) > 50) {
             return clean_extracted_text($output);
         }
@@ -493,24 +527,30 @@ function call_winston_api(string $postData, string $apiKey): ?array
 
     $decoded = json_decode((string)$response, true);
 
+    $isInsufficientCredit = is_array($decoded) &&
+        isset($decoded['response']['error']) &&
+        $decoded['response']['error'] === 'INSUFFICIENT_CREDIT';
+
     $isQuotaError = $httpCode === 429 ||
+        $isInsufficientCredit ||
         (is_array($decoded) && isset($decoded['error']) &&
             stripos($decoded['error'], 'quota') !== false);
 
     if ($isQuotaError) {
-        return ['error' => 'quota', 'httpCode' => $httpCode, 'response' => $response];
+        $description = $decoded['response']['description'] ?? $decoded['description'] ?? '';
+        $fallbackMsg = $isInsufficientCredit
+            ? 'Insufficient API credits. ' . ($description ?: 'Please add credits at https://dev.gowinston.ai/billing')
+            : ($decoded['error'] ?? 'API quota exceeded.');
+        return [
+            'error' => 'quota',
+            'httpCode' => $httpCode,
+            'response' => json_encode(['error' => $fallbackMsg]),
+        ];
     }
 
     // Check for auth errors (403) or other non-2xx responses
     if ($httpCode < 200 || $httpCode >= 300) {
         $errorMsg = $decoded['error'] ?? $decoded['message'] ?? 'API returned error ' . $httpCode;
-        $description = $decoded['response']['description'] ?? $decoded['description'] ?? '';
-
-        // Show specific error for insufficient credits
-        if (isset($decoded['response']['error']) && $decoded['response']['error'] === 'INSUFFICIENT_CREDIT') {
-            $errorMsg = 'Insufficient API credits. ' . ($description ?: 'Please add credits at https://dev.gowinston.ai/billing');
-        }
-
         return ['error' => 'api', 'httpCode' => $httpCode, 'response' => json_encode(['error' => $errorMsg])];
     }
 
@@ -543,6 +583,8 @@ function mark_key_exhausted(string $key): void
 $apiKeys = is_array(WINSTON_API_KEY) ? WINSTON_API_KEY : [WINSTON_API_KEY];
 $finalResponse = null;
 $finalHttpCode = 500;
+$lastQuotaResponse = null;
+$lastQuotaHttpCode = 429;
 
 foreach ($apiKeys as $apiKey) {
     $result = call_winston_api($postData, $apiKey);
@@ -555,6 +597,8 @@ foreach ($apiKeys as $apiKey) {
 
     if (isset($result['error']) && $result['error'] === 'quota') {
         mark_key_exhausted($apiKey);
+        $lastQuotaResponse = $result['response'] ?? null;
+        $lastQuotaHttpCode = $result['httpCode'] ?: 429;
         continue;
     }
 
@@ -575,6 +619,11 @@ foreach ($apiKeys as $apiKey) {
 // Only text content is sent to Winston API, not file URLs
 
 if ($finalResponse === null) {
+    if ($lastQuotaResponse !== null) {
+        http_response_code($lastQuotaHttpCode);
+        echo $lastQuotaResponse;
+        exit;
+    }
     json_error(429, 'All API keys exhausted. Please try again later.');
 }
 
