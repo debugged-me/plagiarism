@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 const WINSTON_API_KEY = [
-    'DpYnYB838eyVh7BOKXQQjgeQgCaE9PWX8Dk15IEXf40a8de4',
+    '57U6R64zfk9M70XAYrWfUvjyG8m4T6drmQq3Fowtcd8ebf85',
     'oag4QICS9kp8dNQdD6vMmtnd2sthhIb4WmeOWrdS608640d0',
 ];
 const TURNSTILE_SECRET_KEY = '0x4AAAAAACu7HPXs3nrAwQsv5xTLRzMy2vo';
