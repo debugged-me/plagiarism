@@ -6,6 +6,7 @@ const WINSTON_API_KEY = [
     '57U6R64zfk9M70XAYrWfUvjyG8m4T6drmQq3Fowtcd8ebf85',
     'oag4QICS9kp8dNQdD6vMmtnd2sthhIb4WmeOWrdS608640d0',
 ];
+const TURNSTILE_SITE_KEY = '0x4AAAAAADNtbkPGo1it8mZz';
 const TURNSTILE_SECRET_KEY = '0x4AAAAAADNtbpM6oLGO1QdKxdI28a-ON9c';
 define('GOOGLE_CLIENT_ID', '126933193964-8oajgd78l4mfv1f161l0nme9dc1jl2vj.apps.googleusercontent.com');
 define('GOOGLE_CLIENT_SECRET', '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');

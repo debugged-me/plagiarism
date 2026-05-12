@@ -2,6 +2,62 @@
 
 declare(strict_types=1);
 
+@ini_set('memory_limit', '512M');
+@ini_set('max_execution_time', '180');
+@ini_set('display_errors', '0');
+@ini_set('log_errors', '1');
+error_reporting(E_ALL);
+
+ob_start();
+
+header('Content-Type: application/json');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+register_shutdown_function(static function (): void {
+    $err = error_get_last();
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR];
+    if ($err !== null && in_array($err['type'], $fatalTypes, true)) {
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+        }
+        echo json_encode([
+            'error' => 'Server error while processing the file. The PDF may be too large or complex to parse. Try a smaller file or paste the text directly.',
+            'detail' => $err['message'],
+        ]);
+    }
+});
+
+set_exception_handler(static function (\Throwable $e): void {
+    if (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json');
+    }
+    error_log('proxy.php uncaught: ' . $e->getMessage());
+    echo json_encode(['error' => 'Unexpected server error: ' . $e->getMessage()]);
+    exit;
+});
+
+// Detect POST body discarded by server (post_max_size exceeded). When this
+// happens, $_SERVER['CONTENT_LENGTH'] is set but $_POST and $_FILES are empty.
+if ($_SERVER['REQUEST_METHOD'] === 'POST'
+    && empty($_POST) && empty($_FILES)
+    && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+    $postMax = ini_get('post_max_size');
+    http_response_code(413);
+    echo json_encode([
+        'error' => 'Uploaded file is larger than the server allows (post_max_size = ' . $postMax . '). Please upload a smaller file.',
+    ]);
+    exit;
+}
+
 require_once __DIR__ . '/app/secure_config.php';
 require_once __DIR__ . '/app/database.php';
 require_once __DIR__ . '/app/session.php';
@@ -9,10 +65,6 @@ if (is_file(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
 }
 start_app_session();
-
-header('Content-Type: application/json');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -372,6 +424,53 @@ function verify_turnstile(string $token, string $secret, string $ip): void
     }
 }
 
+function detect_mime_type(string $filePath): ?string
+{
+    if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo) {
+            $mime = finfo_file($finfo, $filePath);
+            finfo_close($finfo);
+            if (is_string($mime) && $mime !== '') {
+                return $mime;
+            }
+        }
+    }
+    if (function_exists('mime_content_type')) {
+        $mime = @mime_content_type($filePath);
+        if (is_string($mime) && $mime !== '') {
+            return $mime;
+        }
+    }
+    // Cannot determine; let caller fall back to magic-byte verification.
+    return null;
+}
+
+function verify_magic_bytes(string $filePath, string $ext): bool
+{
+    $fh = @fopen($filePath, 'rb');
+    if (!$fh) {
+        return false;
+    }
+    $head = (string) fread($fh, 8);
+    fclose($fh);
+
+    if ($ext === 'pdf') {
+        return strncmp($head, '%PDF-', 5) === 0;
+    }
+    if ($ext === 'docx') {
+        // DOCX is a ZIP container: signature PK\x03\x04 or PK\x05\x06 (empty) or PK\x07\x08.
+        return strncmp($head, "PK\x03\x04", 4) === 0
+            || strncmp($head, "PK\x05\x06", 4) === 0
+            || strncmp($head, "PK\x07\x08", 4) === 0;
+    }
+    if ($ext === 'doc') {
+        // Legacy .doc OLE2 compound document signature.
+        return strncmp($head, "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", 8) === 0;
+    }
+    return false;
+}
+
 function safe_unlink(?string $path): void
 {
     if ($path && is_file($path)) {
@@ -427,9 +526,7 @@ if ($payloadData['isMultipart'] && !empty($_FILES['file']['tmp_name'])) {
         json_error(400, 'Only PDF, DOC, and DOCX files are supported.');
     }
 
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime  = finfo_file($finfo, $_FILES['file']['tmp_name']);
-    finfo_close($finfo);
+    $mime = detect_mime_type($_FILES['file']['tmp_name']);
 
     $allowedMime = [
         'pdf'  => ['application/pdf'],
@@ -441,8 +538,11 @@ if ($payloadData['isMultipart'] && !empty($_FILES['file']['tmp_name'])) {
         ],
     ];
 
-    if (!in_array($mime, $allowedMime[$ext], true)) {
-        json_error(400, 'Invalid file type or MIME type mismatch.');
+    if ($mime !== null && !in_array($mime, $allowedMime[$ext], true)) {
+        // Verify by magic bytes as a last resort before rejecting.
+        if (!verify_magic_bytes($_FILES['file']['tmp_name'], $ext)) {
+            json_error(400, 'Invalid file type or MIME type mismatch.');
+        }
     }
 
     $safeBase = bin2hex(random_bytes(16));

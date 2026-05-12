@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/app/secure_config.php';
 require_once __DIR__ . '/app/session.php';
 start_app_session();
 ?>
@@ -1990,7 +1991,7 @@ start_app_session();
       <div class="captcha-wrap">
         <div class="captcha-title">Human verification</div>
         <div class="captcha-sub">Please complete the security check before running the scan.</div>
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAACu7HA_zSWn5iEok"></div>
+        <div class="cf-turnstile" data-sitekey="<?php echo htmlspecialchars(TURNSTILE_SITE_KEY); ?>"></div>
       </div>
 
       <button class="run-btn" id="runBtn" onclick="analyze()"> Analyze for Plagiarism</button>
@@ -2081,7 +2082,7 @@ start_app_session();
   </div>
 
   <script>
-    const TURNSTILE_SITE_KEY = '0x4AAAAAADNtbkPGo1it8mZz';
+    const TURNSTILE_SITE_KEY = <?php echo json_encode(TURNSTILE_SITE_KEY); ?>;
     const proxyUrl = <?php echo json_encode(app_path('proxy')); ?>;
     const historyUrl = <?php echo json_encode(app_path('api/history')); ?>;
 
