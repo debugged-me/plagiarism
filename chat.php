@@ -2081,7 +2081,7 @@ start_app_session();
   </div>
 
   <script>
-    const TURNSTILE_SITE_KEY = '0x4AAAAAACu7HA_zSWn5iEok';
+    const TURNSTILE_SITE_KEY = '0x4AAAAAADNtbkPGo1it8mZz';
     const proxyUrl = <?php echo json_encode(app_path('proxy')); ?>;
     const historyUrl = <?php echo json_encode(app_path('api/history')); ?>;
 

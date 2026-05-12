@@ -51,12 +51,25 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => http_build_query($postData),
-    CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded']
+    CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_TIMEOUT => 20,
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_SSL_VERIFYHOST => 2,
+    CURLOPT_FOLLOWLOCATION => false,
+    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
 ]);
 
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlErrno = curl_errno($ch);
+$curlError = curl_error($ch);
 curl_close($ch);
+
+if ($curlErrno !== 0) {
+    error_log('OAuth token exchange cURL error (' . $curlErrno . '): ' . $curlError);
+    die('Could not reach Google to complete sign-in. cURL errno=' . (int)$curlErrno . ' error=' . htmlspecialchars($curlError, ENT_QUOTES, 'UTF-8'));
+}
 
 if ($httpCode !== 200 || !$response) {
     error_log('OAuth token exchange failed: HTTP ' . $httpCode . ', response=' . $response);
