@@ -370,7 +370,6 @@ function get_request_payload(): array
             'text'        => $_POST['text'] ?? '',
             'language'    => $_POST['language'] ?? 'en',
             'country'     => $_POST['country'] ?? 'us',
-            'turnstile'   => $_POST['cf-turnstile-response'] ?? '',
         ];
     }
 
@@ -384,44 +383,7 @@ function get_request_payload(): array
         'text'        => $raw['text'] ?? '',
         'language'    => $raw['language'] ?? 'en',
         'country'     => $raw['country'] ?? 'us',
-        'turnstile'   => $raw['cf-turnstile-response'] ?? '',
     ];
-}
-
-function verify_turnstile(string $token, string $secret, string $ip): void
-{
-    if ($token === '') {
-        json_error(400, 'Human verification token is missing.');
-    }
-
-    $postData = http_build_query([
-        'secret'   => $secret,
-        'response' => $token,
-        'remoteip' => $ip,
-    ]);
-
-    $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => $postData,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
-        CURLOPT_TIMEOUT        => 30,
-        CURLOPT_SSL_VERIFYPEER => true,
-    ]);
-
-    $response = curl_exec($ch);
-    $curlErr  = curl_error($ch);
-    curl_close($ch);
-
-    if ($curlErr) {
-        json_error(502, 'Failed to verify human check.');
-    }
-
-    $decoded = json_decode((string)$response, true);
-    if (!is_array($decoded) || empty($decoded['success'])) {
-        json_error(403, 'Human verification failed. Please try again.');
-    }
 }
 
 function detect_mime_type(string $filePath): ?string
@@ -494,9 +456,6 @@ $payloadData = get_request_payload();
 $text      = trim((string)$payloadData['text']);
 $language  = trim((string)$payloadData['language']) ?: 'en';
 $country   = trim((string)$payloadData['country']) ?: 'us';
-$turnstile = trim((string)$payloadData['turnstile']);
-
-verify_turnstile($turnstile, TURNSTILE_SECRET_KEY, $ip);
 
 $payload = [
     'language' => $language,

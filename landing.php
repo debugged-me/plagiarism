@@ -7,7 +7,7 @@ require_once __DIR__ . '/app/url.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlagiaScope | AI</title>
+    <title>SmartScan | AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Antique&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="icon" href="<?php echo htmlspecialchars(app_path('favicon.svg')); ?>" type="image/svg+xml">
     <style>
@@ -1936,7 +1936,7 @@ require_once __DIR__ . '/app/url.php';
                     <path d="m21 21-4.35-4.35" />
                 </svg></div>
         </div>
-        <div class="ld-title">Plagia<em>Scope</em></div>
+        <div class="ld-title">Smart<em>Scan</em></div>
         <div class="ld-sub">Research Integrity Tool</div>
         <div class="ld-segs">
             <div class="ld-seg"></div>
@@ -1957,7 +1957,7 @@ require_once __DIR__ . '/app/url.php';
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
                 </svg></div>
-            <div class="nav-logo-text">Plagia<em>Scope</em></div>
+            <div class="nav-logo-text">Smart<em>Scan</em></div>
         </a>
         <ul class="nav-links">
             <li><a href="#how">How it works</a></li>
@@ -1994,7 +1994,7 @@ require_once __DIR__ . '/app/url.php';
         </h1>
 
         <p class="hero-sub">
-            PlagiaScope scans your research against <span class="hl">400 billion sources</span> to detect plagiarism, missing citations, and matching content — in seconds.
+            SmartScan scans your research against <span class="hl">400 billion sources</span> to detect plagiarism, missing citations, and matching content — in seconds.
         </p>
 
         <div class="hero-ctas">
@@ -2088,7 +2088,7 @@ require_once __DIR__ . '/app/url.php';
                     <div class="b-dot"></div>
                     <div class="b-dot"></div>
                 </div>
-                <div class="b-url">https://plagiascope.softtechco.biz/</div>
+                <div class="b-url">https://plagia.srmsportal.online/</div>
             </div>
             <div class="browser-body">
                 <div class="b-left">
@@ -2230,7 +2230,7 @@ require_once __DIR__ . '/app/url.php';
                 <div class="cta-eyebrow">Ready when you are</div>
                 <h2 class="cta-h">Check your research.<br><em>Right now.</em></h2>
                 <p class="cta-p">No sign-up. No waiting. Paste your text or upload your file and get results in seconds.</p>
-                <a class="btn-white" href="<?php echo htmlspecialchars(app_path('chat')); ?>">Open PlagiaScope <span class="arr">→</span></a>
+                <a class="btn-white" href="<?php echo htmlspecialchars(app_path('chat')); ?>">Open SmartScan <span class="arr">→</span></a>
             </div>
         </div>
     </section>
@@ -2241,9 +2241,9 @@ require_once __DIR__ . '/app/url.php';
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
                 </svg></div>
-            <div class="ft-name">Plagia<em>Scope</em></div>
+            <div class="ft-name">Smart<em>Scan</em></div>
         </a>
-        <div class="ft-copy">© 2026 PlagiaScope · Powered by Winston AI</div>
+        <div class="ft-copy">© 2026 SmartScan · Powered by Winston AI</div>
     </footer>
 
     <script>

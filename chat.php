@@ -9,9 +9,8 @@ start_app_session();
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PlagiaScope | AI</title>
+  <title>SmartScan | AI</title>
   <script src="config.js"></script>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Shippori+Mincho:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
@@ -983,32 +982,6 @@ start_app_session();
       }
     }
 
-    .captcha-wrap {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: var(--r);
-      box-shadow: var(--sh);
-      padding: 16px 18px;
-      margin-bottom: 14px;
-      animation: fadeUp .5s .58s ease both;
-    }
-
-    .captcha-title {
-      font-family: var(--font-display);
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--ink);
-      margin-bottom: 6px;
-      letter-spacing: .02em;
-    }
-
-    .captcha-sub {
-      font-family: var(--font-body);
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
-
     .run-btn {
       width: 100%;
       height: 56px;
@@ -1831,7 +1804,7 @@ start_app_session();
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.35-4.35" />
         </svg></div>
-      <div class="brand-name">Plagia<em>Scope</em></div>
+      <div class="brand-name">Smart<em>Scan</em></div>
     </a>
     <div class="top-r">
       <button class="dm-btn" id="dmBtn" style="display: grid; place-items: center;">
@@ -1988,12 +1961,6 @@ start_app_session();
 
       <div class="err" id="errBanner"><span>⚠</span><span id="errMsg"></span></div>
 
-      <div class="captcha-wrap">
-        <div class="captcha-title">Human verification</div>
-        <div class="captcha-sub">Please complete the security check before running the scan.</div>
-        <div class="cf-turnstile" data-sitekey="<?php echo htmlspecialchars(TURNSTILE_SITE_KEY); ?>"></div>
-      </div>
-
       <button class="run-btn" id="runBtn" onclick="analyze()"> Analyze for Plagiarism</button>
     </div>
 
@@ -2082,7 +2049,6 @@ start_app_session();
   </div>
 
   <script>
-    const TURNSTILE_SITE_KEY = <?php echo json_encode(TURNSTILE_SITE_KEY); ?>;
     const proxyUrl = <?php echo json_encode(app_path('proxy')); ?>;
     const historyUrl = <?php echo json_encode(app_path('api/history')); ?>;
 
@@ -2199,19 +2165,6 @@ start_app_session();
       document.getElementById('errBanner').classList.remove('on');
     }
 
-    function getTurnstileToken() {
-      const tokenField = document.querySelector('[name="cf-turnstile-response"]');
-      return tokenField ? tokenField.value.trim() : '';
-    }
-
-    function resetTurnstileWidget() {
-      if (window.turnstile) {
-        try {
-          window.turnstile.reset();
-        } catch (e) {}
-      }
-    }
-
     const phases = [
       'Connecting to Winston AI…',
       'Uploading to scan engine…',
@@ -2253,11 +2206,6 @@ start_app_session();
 
     async function analyze() {
       hideErr();
-      const turnstileToken = getTurnstileToken();
-      if (!turnstileToken) {
-        showErr('Please complete the human verification first.');
-        return;
-      }
       const cfg = getConfig();
       let opts;
 
@@ -2270,7 +2218,6 @@ start_app_session();
         fd.append('language', cfg.language || 'en');
         fd.append('country', cfg.country || 'us');
         fd.append('file', selFile, selFile.name);
-        fd.append('cf-turnstile-response', turnstileToken);
         opts = {
           method: 'POST',
           body: fd
@@ -2297,8 +2244,7 @@ start_app_session();
           body: JSON.stringify({
             text,
             language: cfg.language || 'en',
-            country: cfg.country || 'us',
-            'cf-turnstile-response': turnstileToken
+            country: cfg.country || 'us'
           })
         };
       }
@@ -2319,7 +2265,6 @@ start_app_session();
             document.getElementById('loadWrap').classList.remove('on');
             document.getElementById('inputSection').style.display = 'block';
             document.getElementById('runBtn').disabled = false;
-            resetTurnstileWidget();
             showPremiumModal(data.scans_today || 0);
             return;
           }
@@ -2333,14 +2278,12 @@ start_app_session();
         document.getElementById('loadWrap').classList.remove('on');
         document.getElementById('inputSection').style.display = 'block';
         document.getElementById('runBtn').disabled = false;
-        resetTurnstileWidget();
         showErr('Error: ' + (err.message || 'Unexpected error.'));
       }
     }
 
     function renderResults(data, origText) {
       document.getElementById('runBtn').disabled = false;
-      resetTurnstileWidget();
       document.getElementById('loadWrap').classList.remove('on');
       document.getElementById('resultsSection').classList.add('on');
 
@@ -2481,7 +2424,6 @@ start_app_session();
       document.getElementById('inputSection').style.display = 'block';
       document.getElementById('resultsSection').classList.remove('on');
       document.getElementById('runBtn').disabled = false;
-      resetTurnstileWidget();
       window.scrollTo({
         top: 0,
         behavior: 'smooth'

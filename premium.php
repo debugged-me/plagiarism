@@ -21,7 +21,7 @@ if (!empty($_SESSION['is_premium'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upgrade to Premium | PlagiaScope</title>
+    <title>Upgrade to Premium | SmartScan</title>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Shippori+Mincho:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <style>
@@ -483,7 +483,7 @@ if (!empty($_SESSION['is_premium'])) {
     <div class="topbar">
         <a href="<?php echo htmlspecialchars(app_path('/')); ?>" class="brand">
             <div class="brand-ico">P</div>
-            <span class="brand-name">Plagia<em>Scope</em></span>
+            <span class="brand-name">Smart<em>Scan</em></span>
         </a>
         <div class="top-r">
             <a href="<?php echo htmlspecialchars(app_path('chat')); ?>" class="nav-link">New Scan</a>
